@@ -1,0 +1,24 @@
+{
+  "name": "cpp-scheduler-web-scraper",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZombiMigz/cpp-scheduler-web-scraper.git"
+  },
+  "author": "Luciano Lim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper/issues"
+  },
+  "homepage": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper#readme",
+  "dependencies": {
+    "dotenv": "^14.2.0",
+    "mysql2": "^2.3.3",
+    "sequelize": "^6.13.0"
+  }
+}
