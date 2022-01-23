@@ -8,18 +8,7 @@ const sequelize = new Sequelize("database", process.env.DB_USERNAME, process.env
   dialect: "mysql",
   dialectOptions: { connectTimeout: 150000 },
 });
-
-sequelize
-  .authenticate()
-  .then(() => {
-    console.log("Connection to database established");
-  })
-  .catch((e) => {
-    console.log("Failed to connect to database: ", e);
-  });
-
 let Section = sequelize.define("section", {
-  Building: Sequelize.STRING,
   ClassCapacity: Sequelize.INTEGER,
   ClassNumber: Sequelize.INTEGER,
   ClassTitle: Sequelize.STRING,
@@ -31,8 +20,8 @@ let Section = sequelize.define("section", {
   InstructionMode: Sequelize.STRING,
   InstructorFirst: Sequelize.STRING,
   InstructorLast: Sequelize.STRING,
+  Location: Sequelize.STRING,
   Monday: Sequelize.BOOLEAN,
-  Room: Sequelize.STRING,
   Saturday: Sequelize.BOOLEAN,
   Section: Sequelize.STRING,
   StartDate: Sequelize.DATEONLY,
@@ -58,62 +47,67 @@ let Section = sequelize.define("section", {
   "D-": Sequelize.INTEGER,
   F: Sequelize.INTEGER,
 });
-Section.sync({ alter: true }).then(() => {
-  console.log("Synced Section table");
-});
+
+exports.sequelize = sequelize;
+exports.Section = Section;
 
 const classHistory = require("./classHistory.json");
-
-function updateSection(section) {
-  Section.findOne({ where: { Term: section.Term, ClassNumber: section["Class Number"] } }).then((existingSection) => {
-    let newData = {
-      ClassCapacity: section["Enroll Capacity"],
-      ClassNumber: section["Class Number"],
-      CourseNumber: section["Catalog Number"],
-      EndDate: section["CLASS_END_DATE"],
-      EndTime: section["Class End Time"] ? moment(section["Class End Time"], "hh:mm:ssA").format("HH:mm:ss") : null,
-      Friday: section["CLASS_FRIDAY_MTG1"] == "Y",
-      InstructionMode: section["Instruction Mode"],
-      InstructorFirst: section["Instructor Name"] ? section["Instructor Name"].split(",")[1] : null,
-      InstructorLast: section["Instructor Name"] ? section["Instructor Name"].split(",")[0] : null,
-      Monday: section["CLASS_MONDAY_MTG1"] == "Y",
-      Saturday: section["CLASS_SATURDAY_MTG1"] == "Y",
-      Section: section["Class Section"],
-      StartDate: section["CLASS_START_DATE"],
-      StartTime: section["Class Start Time"]
-        ? moment(section["Class Start Time"], "hh:mm:ssA").format("HH:mm:ss")
-        : null,
-      Subject: section["Subject"],
-      Sunday: section["CLASS_SUNDAY_MTG1"] == "Y",
-      Term: section["Term"],
-      Thursday: section["CLASS_THURSDAY_MTG1"] == "Y",
-      Tuesday: section["CLASS_TUESDAY_MTG1"] == "Y",
-      TotalEnrollment: section["Enroll Total"],
-      Wednesday: section["CLASS_WEDNESDAY_MTG1"] == "Y",
-      A: section["Bronco ID_Count_A"],
-      "A-": section["Bronco ID_Count_A-"],
-      "B+": section["Bronco ID_Count_B+"],
-      B: section["Bronco ID_Count_B"],
-      "B-": section["Bronco ID_Count_B-"],
-      "C+": section["Bronco ID_Count_C+"],
-      C: section["Bronco ID_Count_C"],
-      "C-": section["Bronco ID_Count_C-"],
-      "D+": section["Bronco ID_Count_D+"],
-      D: section["Bronco ID_Count_D"],
-      "D-": section["Bronco ID_Count_D-"],
-      F: section["Bronco ID_Count_F"],
-    };
-    if (!existingSection) {
-      Section.create(newData);
-    } else {
-      existingSection.set(newData);
-      existingSection.save();
-    }
-  });
+const { scrapePublicSchedule } = require("./scraper");
+async function updateSection(section) {
+  let existingSection = await Section.findOne({ where: { Term: section.Term, ClassNumber: section["Class Number"] } });
+  let newData = {
+    ClassCapacity: section["Enroll Capacity"],
+    ClassNumber: section["Class Number"],
+    CourseNumber: section["Catalog Number"],
+    EndDate: section["CLASS_END_DATE"],
+    EndTime: section["Class End Time"] ? moment(section["Class End Time"], "hh:mm:ssA").format("HH:mm:ss") : null,
+    Friday: section["CLASS_FRIDAY_MTG1"] == "Y",
+    InstructionMode: section["Instruction Mode"],
+    InstructorFirst: section["Instructor Name"] ? section["Instructor Name"].split(",")[1] : null,
+    InstructorLast: section["Instructor Name"] ? section["Instructor Name"].split(",")[0] : null,
+    Monday: section["CLASS_MONDAY_MTG1"] == "Y",
+    Saturday: section["CLASS_SATURDAY_MTG1"] == "Y",
+    Section: section["Class Section"],
+    StartDate: section["CLASS_START_DATE"],
+    StartTime: section["Class Start Time"] ? moment(section["Class Start Time"], "hh:mm:ssA").format("HH:mm:ss") : null,
+    Subject: section["Subject"],
+    Sunday: section["CLASS_SUNDAY_MTG1"] == "Y",
+    Term: section["Term"],
+    Thursday: section["CLASS_THURSDAY_MTG1"] == "Y",
+    Tuesday: section["CLASS_TUESDAY_MTG1"] == "Y",
+    TotalEnrollment: section["Enroll Total"],
+    Wednesday: section["CLASS_WEDNESDAY_MTG1"] == "Y",
+    A: section["Bronco ID_Count_A"] || 0,
+    "A-": section["Bronco ID_Count_A-"] || 0,
+    "B+": section["Bronco ID_Count_B+"] || 0,
+    B: section["Bronco ID_Count_B"] || 0,
+    "B-": section["Bronco ID_Count_B-"] || 0,
+    "C+": section["Bronco ID_Count_C+"] || 0,
+    C: section["Bronco ID_Count_C"] || 0,
+    "C-": section["Bronco ID_Count_C-"] || 0,
+    "D+": section["Bronco ID_Count_D+"] || 0,
+    D: section["Bronco ID_Count_D"] || 0,
+    "D-": section["Bronco ID_Count_D-"] || 0,
+    F: section["Bronco ID_Count_F"] || 0,
+  };
+  if (!existingSection) {
+    await Section.create(newData);
+  } else {
+    existingSection.set(newData);
+    await existingSection.save();
+  }
 }
 
-["Spring 2021"].forEach((key) => {
-  classHistory[key].forEach((section) => {
-    updateSection(section);
-  });
-});
+(async () => {
+  await sequelize.authenticate();
+  console.log("Connected to database");
+  await Section.sync({ alter: true });
+  console.log("Synced Section table");
+
+  for (let key of Object.keys(classHistory)) {
+    for (let section of classHistory[key]) {
+      await updateSection(section);
+    }
+  }
+  // await scrapeOfferings();
+})();
