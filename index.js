@@ -7,6 +7,7 @@ const sequelize = new Sequelize("database", process.env.DB_USERNAME, process.env
   host: process.env.DB_HOST,
   dialect: "mysql",
   dialectOptions: { connectTimeout: 150000 },
+  logging: false,
 });
 let Section = sequelize.define("section", {
   ClassCapacity: Sequelize.INTEGER,
@@ -53,7 +54,9 @@ exports.Section = Section;
 
 const classHistory = require("./classHistory.json");
 const { scrapePublicSchedule } = require("./scraper");
+
 async function updateSection(section) {
+  console.log("Loading", section.Term, section["Class Number"]);
   let existingSection = await Section.findOne({ where: { Term: section.Term, ClassNumber: section["Class Number"] } });
   let newData = {
     ClassCapacity: section["Enroll Capacity"],
@@ -104,10 +107,11 @@ async function updateSection(section) {
   await Section.sync({ alter: true });
   console.log("Synced Section table");
 
-  for (let key of Object.keys(classHistory)) {
-    for (let section of classHistory[key]) {
-      await updateSection(section);
-    }
-  }
-  // await scrapeOfferings();
+  // await scrapePublicSchedule();
+
+  // for (let key of Object.keys(classHistory)) {
+  //   for (let section of classHistory[key]) {
+  //     await updateSection(section);
+  //   }
+  // }
 })();
