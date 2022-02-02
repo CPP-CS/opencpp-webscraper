@@ -54,6 +54,7 @@ exports.Section = Section;
 
 const classHistory = require("./classHistory.json");
 const { scrapePublicSchedule } = require("./scraper");
+const { removeInitials, removeJr } = require("./utils");
 
 async function updateSection(section) {
   console.log("Loading", section.Term, section["Class Number"]);
@@ -66,8 +67,8 @@ async function updateSection(section) {
     EndTime: section["Class End Time"] ? moment(section["Class End Time"], "hh:mm:ssA").format("HH:mm:ss") : null,
     Friday: section["CLASS_FRIDAY_MTG1"] == "Y",
     InstructionMode: section["Instruction Mode"],
-    InstructorFirst: section["Instructor Name"] ? section["Instructor Name"].split(",")[1] : null,
-    InstructorLast: section["Instructor Name"] ? section["Instructor Name"].split(",")[0] : null,
+    InstructorFirst: section["Instructor Name"] ? removeInitials(section["Instructor Name"].split(",")[1]) : null,
+    InstructorLast: section["Instructor Name"] ? removeJr(section["Instructor Name"].split(",")[0]) : null,
     Monday: section["CLASS_MONDAY_MTG1"] == "Y",
     Saturday: section["CLASS_SATURDAY_MTG1"] == "Y",
     Section: section["Class Section"],
@@ -95,9 +96,19 @@ async function updateSection(section) {
   };
   if (!existingSection) {
     await Section.create(newData);
+    console.log("Created new section:", newData.Term, newData.ClassNumber);
   } else {
     existingSection.set(newData);
     await existingSection.save();
+    console.log("Updated section:", newData.Term, newData.ClassNumber);
+  }
+}
+
+async function scrapeClassHistory() {
+  for (let key of Object.keys(classHistory)) {
+    for (let section of classHistory[key]) {
+      await updateSection(section);
+    }
   }
 }
 
@@ -107,11 +118,7 @@ async function updateSection(section) {
   await Section.sync({ alter: true });
   console.log("Synced Section table");
 
-  // await scrapePublicSchedule();
+  await scrapePublicSchedule();
 
-  // for (let key of Object.keys(classHistory)) {
-  //   for (let section of classHistory[key]) {
-  //     await updateSection(section);
-  //   }
-  // }
+  await scrapeClassHistory();
 })();

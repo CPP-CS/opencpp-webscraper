@@ -1,6 +1,7 @@
 const puppeteer = require("puppeteer");
 const moment = require("moment");
 const { Section } = require("./index");
+const { removeInitials, removeJr } = require("./utils");
 let terms = {
   2233: "SP 2023",
   2231: "W 2023",
@@ -173,8 +174,8 @@ async function scrapeSite(page, termKey, courseComponentKey) {
       sectionInstance.instructorFirst = null;
       sectionInstance.instructorLast = null;
     } else {
-      sectionInstance.instructorLast = instructor.split(/\n/)[0].split(/,\s/)[0];
-      sectionInstance.instructorFirst = instructor.split(/\n/)[0].split(/,\s/)[1];
+      sectionInstance.instructorLast = removeJr(instructor.split(/\n/)[0].split(/,\s/)[0]);
+      sectionInstance.instructorFirst = removeInitials(instructor.split(/\n/)[0].split(/,\s/)[1]);
     }
 
     //component and mode
