@@ -48,13 +48,26 @@ let Section = sequelize.define("section", {
   "D-": Sequelize.INTEGER,
   F: Sequelize.INTEGER,
 });
+let Professor = sequelize.define("professor", {
+  InstructorFirst: {
+    type: Sequelize.STRING,
+    primaryKey: true,
+  },
+  InstructorLast: {
+    type: Sequelize.STRING,
+    primaryKey: true,
+  },
+  AvgGPA: Sequelize.FLOAT,
+});
 
 exports.sequelize = sequelize;
 exports.Section = Section;
+exports.Professor = Professor;
 
 const classHistory = require("./classHistory.json");
 const { scrapePublicSchedule } = require("./scraper");
 const { removeInitials, removeJr } = require("./utils");
+const { calcAverageGPAs } = require("./calculations");
 
 async function updateSection(section) {
   console.log("Loading", section.Term, section["Class Number"]);
@@ -117,8 +130,12 @@ async function scrapeClassHistory() {
   console.log("Connected to database");
   await Section.sync({ alter: true });
   console.log("Synced Section table");
+  await Professor.sync({ alter: true });
+  console.log("Synced Professor table");
 
-  await scrapePublicSchedule();
+  // await scrapePublicSchedule();
 
-  await scrapeClassHistory();
+  // await scrapeClassHistory();
+
+  await calcAverageGPAs();
 })();
