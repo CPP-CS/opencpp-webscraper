@@ -2,11 +2,16 @@ require("dotenv").config();
 const Sequelize = require("sequelize");
 
 const moment = require("moment");
-
-const sequelize = new Sequelize("database", process.env.DB_USERNAME, process.env.DB_PASSWORD, {
+console.log(process.env.DB_HOST, process.env.DB_USERNAME, process.env.DB_PASSWORD);
+const sequelize = new Sequelize("db", process.env.DB_USERNAME, process.env.DB_PASSWORD, {
   host: process.env.DB_HOST,
+  maxConcurrentQueries: 100,
   dialect: "mysql",
-  dialectOptions: { connectTimeout: 150000 },
+  dialectOptions: {
+    ssl: "Amazon RDS",
+  },
+  pool: { maxConnections: 5, maxIdleTime: 30 },
+  language: "en",
   logging: false,
 });
 let Section = sequelize.define("section", {
@@ -133,9 +138,9 @@ async function scrapeClassHistory() {
   await Professor.sync({ alter: true });
   console.log("Synced Professor table");
 
-  // await scrapePublicSchedule();
+  await scrapePublicSchedule();
 
-  // await scrapeClassHistory();
+  await scrapeClassHistory();
 
   await calcAverageGPAs();
 })();

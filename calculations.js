@@ -41,7 +41,7 @@ function calcAvg(sections) {
 }
 
 exports.calcAverageGPAs = async () => {
-  let res = await sequelize.query("SELECT DISTINCT `InstructorFirst`, `InstructorLast` FROM database.sections", {
+  let res = await sequelize.query("SELECT DISTINCT `InstructorFirst`, `InstructorLast` FROM db.sections", {
     model: Section,
     mapToModel: true,
   });
