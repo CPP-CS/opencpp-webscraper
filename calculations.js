@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { sequelize, Section, Professor } = require(".");
+const { sequelize, Section, Professor, Course } = require(".");
 const { GPA } = require("./constants");
 
 async function getAvgGPA(query) {
@@ -40,7 +40,8 @@ function calcAvg(sections) {
   return tPoints / tEnrollment;
 }
 
-exports.calcAverageGPAs = async () => {
+exports.calculateData = async () => {
+  // calculate & make professors
   let res = await sequelize.query("SELECT DISTINCT `InstructorFirst`, `InstructorLast` FROM db.sections", {
     model: Section,
     mapToModel: true,
@@ -59,5 +60,26 @@ exports.calcAverageGPAs = async () => {
     professor.AvgGPA = avgGPA ? avgGPA : null;
     await professor.save();
     console.log(professor.InstructorFirst, professor.InstructorLast, professor.AvgGPA);
+  }
+
+  // calculate and make courses
+  res = await sequelize.query("SELECT DISTINCT `Subject`, `CourseNumber` FROM db.sections", {
+    model: Section,
+    mapToModel: true,
+  });
+  for (let courseName of res) {
+    if (courseName.Subject == null || courseName.CourseNumber == null) continue;
+
+    let avgGPA = await getAvgGPA({
+      subject: courseName.Subject,
+      courseNumber: courseName.CourseNumber,
+    });
+
+    let [course] = await Course.findOrCreate({
+      where: { Subject: courseName.Subject, CourseNumber: courseName.CourseNumber },
+    });
+    course.AvgGPA = avgGPA ? avgGPA : null;
+    await course.save();
+    console.log(course.Subject, course.CourseNumber, course.AvgGPA);
   }
 };
