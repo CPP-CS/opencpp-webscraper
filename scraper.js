@@ -94,7 +94,10 @@ async function scrapeSite(page, termKey, courseComponentKey) {
     //subject and course number
     sectionInstance.subject = courseTitle.split(" ")[0];
     sectionInstance.courseNumber = courseTitle.split(" ")[1];
-    sectionInstance.section = (await page.evaluate((el) => el.innerText, section)).split(" ")[3].split("Class")[0];
+    sectionInstance.section = (await page.evaluate((el) => el.innerText, section))
+      .split(" ")[3]
+      .split("Class")[0]
+      .replace("\n", "");
 
     console.log("scraping data", sectionInstance.subject, sectionInstance.courseNumber, sectionInstance.section);
 
