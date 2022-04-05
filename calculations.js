@@ -1,5 +1,5 @@
 const { Op } = require("sequelize");
-const { sequelize, Section, Professor, Course } = require(".");
+const { sequelize, Section, Professor, Course } = require("./src");
 const { GPA } = require("./constants");
 
 async function getAvgGPA(query) {
