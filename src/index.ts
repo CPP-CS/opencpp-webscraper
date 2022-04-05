@@ -1,14 +1,12 @@
-import { User } from "./../node_modules/.prisma/client/index.d";
 import { PrismaClient } from "@prisma/client";
+import { scrapePublicSchedule } from "./scraper";
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 async function main() {
-  // ... you will write your Prisma Client queries here
-  const allUsers = await prisma.user.findMany();
-  const User;
+  await scrapePublicSchedule();
 
-  console.log(allUsers);
+  console.log("hi");
 }
 
 main()
@@ -172,8 +170,6 @@ main()
 //   console.log("Synced Professor table");
 //   await Course.sync({ alter: true });
 //   console.log("Synced Course table");
-
-//   await scrapePublicSchedule();
 
 //   await scrapeClassHistory();
 

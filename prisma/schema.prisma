@@ -7,28 +7,46 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  title     String   @db.VarChar(255)
-  content   String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
-  authorId  Int
-}
+model Section {
+  id              Int       @id @default(autoincrement())
+  ClassCapacity   Int?
+  ClassNumber     Int?
+  ClassTitle      String?
+  Component       String?
+  CourseNumber    String
+  EndDate         DateTime?
+  EndTime         DateTime?
+  Friday          Boolean?
+  InstructionMode String?
+  InstructorFirst String?
+  InstructorLast  String?
+  Location        String?
+  Monday          Boolean?
+  Saturday        Boolean?
+  Section         String
+  StartDate       DateTime?
+  StartTime       DateTime?
+  Subject         String
+  Sunday          Boolean?
+  Term            String?
+  Thursday        Boolean?
+  Tuesday         Boolean?
+  TotalEnrollment Int?
+  Units           Float?
+  Wednesday       Boolean?
+  A               Int?
+  Am              Int?
+  Bp              Int?
+  B               Int?
+  Bm              Int?
+  Cp              Int?
+  C               Int?
+  Cm              Int?
+  Dp              Int?
+  D               Int?
+  Dm              Int?
+  F               Int?
 
-model Profile {
-  id     Int     @id @default(autoincrement())
-  bio    String?
-  user   User    @relation(fields: [userId], references: [id])
-  userId Int     @unique
-}
-
-model User {
-  id      Int      @id @default(autoincrement())
-  email   String   @unique
-  name    String?
-  posts   Post[]
-  profile Profile?
+  @@unique([Subject, CourseNumber, Section], name: "sectionConstraint")
+  @@map("sections")
 }

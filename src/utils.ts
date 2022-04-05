@@ -1,4 +1,4 @@
-function removeInitials(s) {
+export function removeInitials(s: string) {
   let res = s;
   // while (/(.)\s[A-Z]$/.test(res)) {
   //   res = res.substring(0, res.length - 2);
@@ -7,11 +7,8 @@ function removeInitials(s) {
   return res;
 }
 
-function removeJr(s) {
+export function removeJr(s: string) {
   let res = s;
   res = res.split(" Jr")[0];
   return res;
 }
-
-exports.removeInitials = removeInitials;
-exports.removeJr = removeJr;

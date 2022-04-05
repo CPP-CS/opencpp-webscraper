@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx nodemon src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper#readme",
   "dependencies": {
-    "@prisma/client": "^3.11.1",
+    "@prisma/client": "^3.12.0",
     "dotenv": "^14.2.0",
     "moment": "^2.29.1",
     "mysql2": "^2.3.3",
@@ -25,7 +25,8 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.23",
-    "prisma": "^3.11.1",
+    "nodemon": "^2.0.15",
+    "prisma": "^3.12.0",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
   }
