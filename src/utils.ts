@@ -24,7 +24,7 @@ export function calcAvgGPA(section: Prisma.SectionCreateInput) {
   for (let gradeKey in GPA) {
     tPoints += GPA[gradeKey] * ((section as any)[gradeKey] || 0);
   }
-  console.log(tPoints / tEnrollment);
+  // console.log(tPoints / tEnrollment);
   return tPoints / tEnrollment;
 }
 

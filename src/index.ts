@@ -6,7 +6,7 @@ import { scrapePublicSchedule } from "./scraper";
 export const prismaClient = new PrismaClient();
 
 async function main() {
-  // await scrapePublicSchedule();
+  await scrapePublicSchedule();
 
   await scrapeClassHistory();
 
