@@ -57,8 +57,8 @@ model Section {
 
 model Instruction {
   id              Int     @id @default(autoincrement())
-  Subject         String?
-  CourseNumber    String?
+  Subject         String
+  CourseNumber    String
   InstructorFirst String?
   InstructorLast  String?
 
@@ -67,6 +67,42 @@ model Instruction {
 
   sections Section[]
 
+  Course       Course?     @relation(fields: [courseId], references: [id])
+  courseId     Int?
+  Instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
   @@unique([InstructorFirst, InstructorLast, Subject, CourseNumber], name: "instructionConstraint")
   @@map("instructions")
+}
+
+model Course {
+  id           Int     @id @default(autoincrement())
+  Subject      String?
+  CourseNumber String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  Label String?
+
+  instructions Instruction[]
+
+  @@unique([Subject, CourseNumber], name: "courseConstraint")
+  @@map("courses")
+}
+
+model Instructor {
+  id              Int     @id @default(autoincrement())
+  InstructorFirst String?
+  InstructorLast  String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  Label String?
+
+  instructions Instruction[]
+
+  @@unique([InstructorFirst, InstructorLast], name: "instructorConstraint")
+  @@map("instructors")
 }
