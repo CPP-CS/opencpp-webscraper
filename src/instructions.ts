@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Instruction, Prisma, Section } from "@prisma/client";
 import { prismaClient } from ".";
 import { aggregateGPA } from "./utils";
 
@@ -26,18 +26,17 @@ export async function createInstructions() {
     });
 
     let aggregate = aggregateGPA(sections);
-
     let newInstruction: Prisma.InstructionCreateInput = {
       Subject,
       CourseNumber,
-      InstructorFirst,
-      InstructorLast,
+      InstructorFirst: InstructorFirst || "Staff",
+      InstructorLast: InstructorLast || "",
       TotalEnrollment: aggregate.TotalEnrollment,
       AvgGPA: aggregate.AvgGPA,
     };
 
     // create instruction
-    await prismaClient.instruction.upsert({
+    let createdInstruction = await prismaClient.instruction.upsert({
       where: {
         instructionConstraint: {
           InstructorFirst: InstructorFirst || "Staff",
@@ -48,6 +47,32 @@ export async function createInstructions() {
       },
       create: newInstruction,
       update: newInstruction,
+    });
+
+    await connectSections(createdInstruction, sections);
+  }
+}
+
+async function connectSections(instruction: Instruction, sections: Section[]) {
+  console.log(
+    "Connecting Instruction Sections: ",
+    instruction.Subject,
+    instruction.CourseNumber,
+    instruction.InstructorFirst,
+    instruction.InstructorLast
+  );
+  for (let section of sections) {
+    await prismaClient.instruction.update({
+      where: {
+        id: instruction.id,
+      },
+      data: {
+        sections: {
+          connect: {
+            id: section.id,
+          },
+        },
+      },
     });
   }
 }

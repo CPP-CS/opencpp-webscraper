@@ -48,11 +48,9 @@ model Section {
   F               Int?
   AvgGPA          Float?
 
-
-
-
   instruction   Instruction? @relation(fields: [instructionId], references: [id])
   instructionId Int?
+
   @@unique([Subject, CourseNumber, Section], name: "sectionConstraint")
   @@map("sections")
 }
@@ -68,7 +66,6 @@ model Instruction {
   AvgGPA          Float?
 
   sections Section[]
-
 
   @@unique([InstructorFirst, InstructorLast, Subject, CourseNumber], name: "instructionConstraint")
   @@map("instructions")
