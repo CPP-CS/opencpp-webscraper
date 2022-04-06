@@ -2,7 +2,7 @@ import puppeteer, { Page } from "puppeteer";
 import moment from "moment";
 import { removeInitials, removeJr } from "./utils";
 import { Prisma, Section } from "@prisma/client";
-import { prisma } from ".";
+import { prismaClient } from ".";
 let terms: { [key: number]: string } = {
   2233: "SP 2023",
   2231: "W 2023",
@@ -36,7 +36,7 @@ let courseComponents: { [key: string]: string } = {
 let failedSections: Section[] = [];
 async function updateSection(section: Prisma.SectionCreateInput) {
   console.log("sending to database", section.ClassNumber, section.Subject, section.CourseNumber, section.Section);
-  let existingSection = await prisma.section.upsert({
+  let existingSection = await prismaClient.section.upsert({
     where: {
       sectionConstraint: {
         Subject: section.Subject,
@@ -146,6 +146,8 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     let InstructorFirst: string | undefined = undefined;
     let InstructorLast: string | undefined = undefined;
     if (instructor.includes("Staff") || instructor == "") {
+      InstructorFirst = "Staff";
+      InstructorLast = "";
     } else {
       InstructorLast = removeJr(instructor.split(/\n/)[0].split(/,\s/)[0]);
       InstructorFirst = removeInitials(instructor.split(/\n/)[0].split(/,\s/)[1]);
@@ -178,24 +180,25 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
       Location: Location || null,
       StartDate: StartDate || null,
       EndDate: EndDate || null,
-      InstructorFirst: InstructorFirst || null,
-      InstructorLast: InstructorLast || null,
+      InstructorFirst: InstructorFirst,
+      InstructorLast: InstructorLast,
       InstructionMode: InstructionMode || null,
     });
   }
 }
 
 export async function scrapePublicSchedule() {
+  const browser = await puppeteer.launch({
+    headless: false,
+  });
+  const page = await browser.newPage();
+  await page.goto("https://schedule.cpp.edu/");
   for (let termKey in terms) {
     const term = terms[termKey];
     for (let courseComponentKey in courseComponents) {
       const courseComponent = courseComponents[courseComponentKey];
       console.log("Parsing ", term, courseComponent);
-      const browser = await puppeteer.launch({
-        headless: false,
-      });
-      const page = await browser.newPage();
-      await page.goto("https://schedule.cpp.edu/");
+
       await page.select("select#ctl00_ContentPlaceHolder1_TermDDL", termKey);
       await page.select("select#ctl00_ContentPlaceHolder1_CourseComponentDDL", courseComponentKey);
       await Promise.all([
@@ -207,10 +210,9 @@ export async function scrapePublicSchedule() {
       ]);
 
       await scrapePage(page, term, courseComponent);
-
-      await browser.close();
     }
   }
+  await browser.close();
   console.log(JSON.stringify(failedSections));
 }
 exports.scrapePublicSchedule = scrapePublicSchedule;

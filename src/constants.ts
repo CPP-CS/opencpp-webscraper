@@ -1,19 +1,19 @@
-const GPA = {
+export const GPA: { [key: string]: number } = {
   A: 4.0,
-  "A-": 3.7,
-  "B+": 3.3,
+  Am: 3.7,
+  Bp: 3.3,
   B: 3.0,
-  "B-": 2.7,
-  "C+": 2.3,
+  Bm: 2.7,
+  Cp: 2.3,
   C: 2.0,
-  "C-": 1.7,
-  "D+": 1.3,
+  Cm: 1.7,
+  Dp: 1.3,
   D: 1.0,
-  "D-": 0.7,
+  Dm: 0.7,
   F: 0,
 };
 
-const subjectMap = {
+export const subjectMap = {
   "Don B. Huntley College of Agriculture": {
     "Agribusiness & Food Industry Management/Agricultural Science": {
       ABM: "Agribusiness and Food Industry Management",
@@ -240,6 +240,3 @@ const subjectMap = {
     },
   },
 };
-
-exports.GPA = GPA;
-exports.subjectMap = subjectMap;

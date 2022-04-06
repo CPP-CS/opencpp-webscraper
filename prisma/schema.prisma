@@ -31,9 +31,9 @@ model Section {
   Term            String?
   Thursday        Boolean?
   Tuesday         Boolean?
-  TotalEnrollment Int?
   Units           Float?
   Wednesday       Boolean?
+  TotalEnrollment Int?
   A               Int?
   Am              Int?
   Bp              Int?
@@ -46,7 +46,30 @@ model Section {
   D               Int?
   Dm              Int?
   F               Int?
+  AvgGPA          Float?
 
+
+
+
+  instruction   Instruction? @relation(fields: [instructionId], references: [id])
+  instructionId Int?
   @@unique([Subject, CourseNumber, Section], name: "sectionConstraint")
   @@map("sections")
+}
+
+model Instruction {
+  id              Int     @id @default(autoincrement())
+  Subject         String?
+  CourseNumber    String?
+  InstructorFirst String?
+  InstructorLast  String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  sections Section[]
+
+
+  @@unique([InstructorFirst, InstructorLast, Subject, CourseNumber], name: "instructionConstraint")
+  @@map("instructions")
 }
