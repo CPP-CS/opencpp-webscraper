@@ -28,7 +28,7 @@ model Section {
   StartTime       DateTime?
   Subject         String
   Sunday          Boolean?
-  Term            String?
+  Term            String
   Thursday        Boolean?
   Tuesday         Boolean?
   Units           Float?
@@ -51,7 +51,7 @@ model Section {
   instruction   Instruction? @relation(fields: [instructionId], references: [id])
   instructionId Int?
 
-  @@unique([Subject, CourseNumber, Section], name: "sectionConstraint")
+  @@unique([Term, Subject, CourseNumber, Section], name: "sectionConstraint")
   @@map("sections")
 }
 

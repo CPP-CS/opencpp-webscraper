@@ -36,9 +36,10 @@ let courseComponents: { [key: string]: string } = {
 let failedSections: Section[] = [];
 async function updateSection(section: Prisma.SectionCreateInput) {
   console.log("sending to database", section.ClassNumber, section.Subject, section.CourseNumber, section.Section);
-  let existingSection = await prismaClient.section.upsert({
+  await prismaClient.section.upsert({
     where: {
       sectionConstraint: {
+        Term: section.Term,
         Subject: section.Subject,
         CourseNumber: section.CourseNumber,
         Section: section.Section,
@@ -159,7 +160,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     let InstructionMode: string = componentAndMode.split(/,\s/)[1];
 
     await updateSection({
-      Term: Term || null,
+      Term: Term,
       Component: Component || null,
       Subject: Subject,
       CourseNumber: CourseNumber,

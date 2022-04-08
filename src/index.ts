@@ -8,11 +8,11 @@ import { scrapePublicSchedule } from "./scraper";
 export const prismaClient = new PrismaClient();
 
 async function main() {
-  // await scrapePublicSchedule();
-  // await scrapeClassHistory();
-  // await createInstructions();
-  // await createCourses();
-  // await createInstructors();
+  await scrapePublicSchedule();
+  await scrapeClassHistory();
+  await createInstructions();
+  await createCourses();
+  await createInstructors();
 }
 
 main()

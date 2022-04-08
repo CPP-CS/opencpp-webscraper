@@ -73,7 +73,7 @@ async function updateSection(section: cppSection) {
     StartTime: section["Class Start Time"] ? parseTime(section["Class Start Time"]) : undefined,
     Subject: section["Subject"],
     Sunday: section["CLASS_SUNDAY_MTG1"] == "Y",
-    Term: section["Term"],
+    Term: section["Term"] || "TermLess",
     Thursday: section["CLASS_THURSDAY_MTG1"] == "Y",
     Tuesday: section["CLASS_TUESDAY_MTG1"] == "Y",
     TotalEnrollment: section["Enroll Total"] ? parseInt(section["Enroll Total"]) : undefined,
@@ -95,6 +95,7 @@ async function updateSection(section: cppSection) {
   await prismaClient.section.upsert({
     where: {
       sectionConstraint: {
+        Term: newData.Term,
         Subject: newData.Subject,
         CourseNumber: newData.CourseNumber,
         Section: newData.Section,
