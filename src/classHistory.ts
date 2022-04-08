@@ -46,11 +46,11 @@ export interface cppSection {
   "Bronco ID_Count_F": string | undefined;
 }
 
-function parseTime(time: string): Date {
-  return moment(time, "hh:mm A").toDate();
+function parseTime(time: string): string {
+  return moment(time, "hh:mm A").format("hh:mm");
 }
-function parseDate(date: string): Date {
-  return moment(date, "YYYY-MM-DD").toDate();
+function parseDate(date: string): string {
+  return moment(date, "YYYY-MM-DD").format("YYYY-MM-DD");
 }
 
 async function updateSection(section: cppSection) {

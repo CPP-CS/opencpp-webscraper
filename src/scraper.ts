@@ -49,11 +49,11 @@ async function updateSection(section: Prisma.SectionCreateInput) {
     update: section,
   });
 }
-function parseTime(time: string): Date {
-  return moment(time, "hh:mm A").toDate();
+function parseTime(time: string): string {
+  return moment(time, "hh:mm A").format("HH:mm");
 }
-function parseDate(date: string): Date {
-  return moment(date, "YYYY-MM-DD").toDate();
+function parseDate(date: string): string {
+  return moment(date, "YYYY-MM-DD").format("YYYY-MM-DD");
 }
 
 async function scrapePage(page: Page, term: string, courseComponent: string) {
@@ -121,8 +121,8 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     }
 
     time = time.split(/(\s\s\s)/)[0];
-    let StartTime: Date | undefined = undefined;
-    let EndTime: Date | undefined = undefined;
+    let StartTime: string | undefined = undefined;
+    let EndTime: string | undefined = undefined;
     if (time == "No time set.") {
     } else {
       StartTime = parseTime(time.split("–")[0]);
@@ -176,11 +176,11 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
       Thursday: Thursday || null,
       Friday: Friday || null,
       Saturday: Saturday || null,
-      StartTime: StartTime || null,
-      EndTime: EndTime || null,
+      StartTime: StartTime,
+      EndTime: EndTime,
       Location: Location || null,
-      StartDate: StartDate || null,
-      EndDate: EndDate || null,
+      StartDate: StartDate,
+      EndDate: EndDate,
       InstructorFirst: InstructorFirst,
       InstructorLast: InstructorLast,
       InstructionMode: InstructionMode || null,
@@ -190,7 +190,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
 
 export async function scrapePublicSchedule() {
   const browser = await puppeteer.launch({
-    headless: false,
+    // headless: false,
   });
   const page = await browser.newPage();
   await page.goto("https://schedule.cpp.edu/");

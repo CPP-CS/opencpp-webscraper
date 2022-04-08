@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Section {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   ClassCapacity   Int?
   ClassNumber     Int?
   ClassTitle      String?
   Component       String?
   CourseNumber    String
-  EndDate         DateTime?
-  EndTime         DateTime?
+  EndDate         String?
+  EndTime         String?
   Friday          Boolean?
   InstructionMode String?
   InstructorFirst String?
@@ -24,8 +24,8 @@ model Section {
   Monday          Boolean?
   Saturday        Boolean?
   Section         String
-  StartDate       DateTime?
-  StartTime       DateTime?
+  StartDate       String?
+  StartTime       String?
   Subject         String
   Sunday          Boolean?
   Term            String
