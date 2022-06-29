@@ -3,6 +3,7 @@ import moment from "moment";
 import { removeInitials, removeJr } from "./utils";
 import { Prisma, Section } from "@prisma/client";
 import { prismaClient } from ".";
+import { deflateSync } from "zlib";
 let terms: { [key: number]: string } = {
   2233: "SP 2023",
   2231: "W 2023",
@@ -190,24 +191,38 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
 
 export async function scrapePublicSchedule() {
   const browser = await puppeteer.launch({
-    // headless: false,
+    headless: false,
   });
   const page = await browser.newPage();
   await page.goto("https://schedule.cpp.edu/");
+  // await page.waitForNavigation({
+  //   timeout: 300000,
+  //   waitUntil: "networkidle2",
+  // });
   for (let termKey in terms) {
     const term = terms[termKey];
     for (let courseComponentKey in courseComponents) {
       const courseComponent = courseComponents[courseComponentKey];
       console.log("Parsing ", term, courseComponent);
 
+      console.log("selecting term");
       await page.select("select#ctl00_ContentPlaceHolder1_TermDDL", termKey);
+      console.log("selecting course component");
       await page.select("select#ctl00_ContentPlaceHolder1_CourseComponentDDL", courseComponentKey);
+      console.log("Finding search button");
+      let searchButton = await page.$("#ctl00_ContentPlaceHolder1_SearchButton");
+
+      // await new Promise((res) => {
+      //   setTimeout(res, 1000000000);
+      // });
+      // await page.click("#ctl00_ContentPlaceHolder1_SearchButton");
+      console.log("clicking search button");
       await Promise.all([
         page.waitForNavigation({
           timeout: 300000,
           waitUntil: "load",
         }),
-        page.click("#ctl00_ContentPlaceHolder1_SearchButton"),
+        searchButton!.evaluate((b) => b.click()),
       ]);
 
       await scrapePage(page, term, courseComponent);
