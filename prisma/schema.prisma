@@ -1,0 +1,108 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Section {
+  id              Int      @id @default(autoincrement())
+  ClassCapacity   Int?
+  ClassNumber     Int?
+  ClassTitle      String?
+  Component       String?
+  CourseNumber    String
+  EndDate         String?
+  EndTime         String?
+  Friday          Boolean?
+  InstructionMode String?
+  InstructorFirst String?
+  InstructorLast  String?
+  Location        String?
+  Monday          Boolean?
+  Saturday        Boolean?
+  Section         String
+  StartDate       String?
+  StartTime       String?
+  Subject         String
+  Sunday          Boolean?
+  Term            String
+  Thursday        Boolean?
+  Tuesday         Boolean?
+  Units           Float?
+  Wednesday       Boolean?
+  TotalEnrollment Int?
+  A               Int?
+  Am              Int?
+  Bp              Int?
+  B               Int?
+  Bm              Int?
+  Cp              Int?
+  C               Int?
+  Cm              Int?
+  Dp              Int?
+  D               Int?
+  Dm              Int?
+  F               Int?
+  AvgGPA          Float?
+
+  instruction   Instruction? @relation(fields: [instructionId], references: [id])
+  instructionId Int?
+
+  @@unique([Term, Subject, CourseNumber, Section], name: "sectionConstraint")
+  @@map("sections")
+}
+
+model Instruction {
+  id              Int     @id @default(autoincrement())
+  Subject         String
+  CourseNumber    String
+  InstructorFirst String?
+  InstructorLast  String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  sections Section[]
+
+  Course       Course?     @relation(fields: [courseId], references: [id])
+  courseId     Int?
+  Instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
+  @@unique([InstructorFirst, InstructorLast, Subject, CourseNumber], name: "instructionConstraint")
+  @@map("instructions")
+}
+
+model Course {
+  id           Int     @id @default(autoincrement())
+  Subject      String?
+  CourseNumber String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  Label String?
+
+  instructions Instruction[]
+
+  @@unique([Subject, CourseNumber], name: "courseConstraint")
+  @@map("courses")
+}
+
+model Instructor {
+  id              Int     @id @default(autoincrement())
+  InstructorFirst String?
+  InstructorLast  String?
+
+  TotalEnrollment Int?
+  AvgGPA          Float?
+
+  Label String?
+
+  instructions Instruction[]
+
+  @@unique([InstructorFirst, InstructorLast], name: "instructorConstraint")
+  @@map("instructors")
+}
