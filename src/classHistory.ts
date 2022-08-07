@@ -52,7 +52,21 @@ function parseTime(time: string): string {
 function parseDate(date: string): string {
   return moment(date, "YYYY-MM-DD").format("YYYY-MM-DD");
 }
-
+// fix mistakes in cpp subject data
+function fixSubject(subject: string): string {
+  switch (subject) {
+    case "Animal Hea":
+      return "AHS";
+    case "Educationa":
+      return "EDD";
+    case "Engineerin":
+      return "EMT";
+    case "Math Ed":
+      return "MAE";
+    default:
+      return subject;
+  }
+}
 async function updateSection(section: cppSection) {
   console.log("Loading", section.Term, section["Class Number"]);
 
@@ -71,7 +85,7 @@ async function updateSection(section: cppSection) {
     Section: section["Class Section"],
     StartDate: section["CLASS_START_DATE"] ? parseDate(section["CLASS_START_DATE"]) : undefined,
     StartTime: section["Class Start Time"] ? parseTime(section["Class Start Time"]) : undefined,
-    Subject: section["Subject"],
+    Subject: fixSubject(section["Subject"]),
     Sunday: section["CLASS_SUNDAY_MTG1"] == "Y",
     Term: section["Term"] || "TermLess",
     Thursday: section["CLASS_THURSDAY_MTG1"] == "Y",
