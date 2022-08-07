@@ -1,11 +1,14 @@
-import { Prisma, Section } from "@prisma/client";
+import { prisma, Prisma, Section } from "@prisma/client";
+import { prismaClient } from ".";
 import { GPA } from "./constants";
+
+export async function truncateDatabase() {
+  await prismaClient.course.deleteMany({ where: {} });
+  await prismaClient.instructor.deleteMany({ where: {} });
+}
 
 export function removeInitials(s: string) {
   let res = s;
-  // while (/(.)\s[A-Z]$/.test(res)) {
-  //   res = res.substring(0, res.length - 2);
-  // }
   res = res.split(" ")[0];
   return res;
 }
