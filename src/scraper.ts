@@ -230,7 +230,7 @@ export async function scrapePublicSchedule(current?: boolean) {
     return term[0] == process.env.CURRENT_TERM;
   });
   let parsingTerms = Object.entries(terms).slice(0, currIndex + 1);
-  if (process.env.MODE == "clean") parsingTerms = Object.entries(terms);
+  if (!current) parsingTerms = Object.entries(terms);
   console.log(parsingTerms);
 
   // scrape through each term
