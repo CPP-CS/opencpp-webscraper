@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper#readme",
   "dependencies": {
-    "@prisma/client": "^3.12.0",
+    "@prisma/client": "^4.2.1",
     "dotenv": "^14.2.0",
     "moment": "^2.29.1",
     "mysql2": "^2.3.3",
@@ -27,7 +27,7 @@
   "devDependencies": {
     "@types/node": "^17.0.23",
     "nodemon": "^2.0.15",
-    "prisma": "^3.12.0",
+    "prisma": "^4.2.1",
     "ts-node": "^10.7.0",
     "typescript": "^4.6.3"
   }
