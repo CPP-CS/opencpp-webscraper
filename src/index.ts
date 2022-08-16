@@ -1,8 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { calcGPA } from "./calcGPA";
 import { scrapeClassHistory } from "./classHistory";
-import { createCourses } from "./courses";
-import { createInstructions } from "./instructions";
-import { createInstructors } from "./instructor";
 import { scrapePublicSchedule } from "./scraper";
 import { truncateDatabase } from "./utils";
 
@@ -10,12 +8,18 @@ export const prismaClient = new PrismaClient();
 
 async function main() {
   console.time("timer");
+  console.time("truncate");
   await truncateDatabase();
+  console.timeEnd("truncate");
+  console.time("scrape public schedule");
   await scrapePublicSchedule();
-  await scrapeClassHistory();
-  await createInstructions();
-  await createCourses();
-  await createInstructors();
+  console.timeEnd("scrape public schedule");
+  // console.time("scrape history");
+  // await scrapeClassHistory();
+  // console.timeEnd("scrape history");
+  // console.time("calcgpa");
+  // await calcGPA();
+  // console.timeEnd("calcgpa");
   console.timeEnd("timer");
 }
 
