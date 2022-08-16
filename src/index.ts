@@ -1,26 +1,25 @@
 import { PrismaClient } from "@prisma/client";
-import { calcGPA } from "./calcGPA";
-import { scrapeClassHistory } from "./classHistory";
 import { scrapePublicSchedule } from "./scraper";
 import { truncateDatabase } from "./utils";
+import "dotenv/config";
+import { scrapeClassHistory } from "./classHistory";
+import { calcGPA } from "./calcGPA";
 
 export const prismaClient = new PrismaClient();
 
 async function main() {
-  console.time("timer");
-  console.time("truncate");
-  await truncateDatabase();
-  console.timeEnd("truncate");
-  console.time("scrape public schedule");
-  await scrapePublicSchedule();
-  console.timeEnd("scrape public schedule");
-  // console.time("scrape history");
-  // await scrapeClassHistory();
-  // console.timeEnd("scrape history");
-  // console.time("calcgpa");
-  // await calcGPA();
-  // console.timeEnd("calcgpa");
-  console.timeEnd("timer");
+  if (process.env.mode == "clean") {
+    console.time("timer");
+    await truncateDatabase();
+    await scrapePublicSchedule();
+    await scrapeClassHistory();
+    await calcGPA();
+    console.timeEnd("timer");
+    return;
+  }
+  if (process.env.mode == "recent") {
+    await scrapePublicSchedule(true);
+  }
 }
 
 main()

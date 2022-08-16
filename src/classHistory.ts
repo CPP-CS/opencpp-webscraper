@@ -11,16 +11,16 @@ export interface cppSection {
   "Class Session": string | undefined;
   Subject: string;
   "Catalog Number": string;
-  "Class Number": string | undefined;
-  "Academic Career": string | undefined;
-  "Class Description": string | undefined;
+  "Class Number": string;
+  "Academic Career": string;
+  "Class Description": string;
   "Class Section": string;
   "Instructor ID": string | undefined;
   "Instructor Name": string | undefined;
-  "Instruction Mode": string | undefined;
+  "Instruction Mode": string;
   "Meeting Pattern": string | undefined;
   "Enroll Total": string | undefined;
-  "Enroll Capacity": string | undefined;
+  "Enroll Capacity": string;
   CLASS_START_DATE: string | undefined;
   CLASS_END_DATE: string | undefined;
   "Class Start Time": string | undefined;
@@ -67,12 +67,11 @@ function fixSubject(subject: string): string {
       return subject;
   }
 }
-async function updateSection(section: cppSection) {
+async function parseSection(section: cppSection): Promise<Prisma.SectionCreateInput> {
   console.log("Loading", section.Term, section["Class Number"]);
-
   let newData: Prisma.SectionCreateInput = {
-    ClassCapacity: section["Enroll Capacity"] ? parseInt(section["Enroll Capacity"]) : undefined,
-    ClassNumber: section["Class Number"] ? parseInt(section["Class Number"]) : undefined,
+    ClassCapacity: parseInt(section["Enroll Capacity"]),
+    ClassNumber: parseInt(section["Class Number"]),
     CourseNumber: section["Catalog Number"],
     EndDate: section["CLASS_END_DATE"] ? parseDate(section["CLASS_END_DATE"]) : undefined,
     EndTime: section["Class End Time"] ? parseTime(section["Class End Time"]) : undefined,
@@ -104,28 +103,118 @@ async function updateSection(section: cppSection) {
     D: section["Bronco ID_Count_D"] ? parseInt(section["Bronco ID_Count_D"]) : undefined,
     Dm: section["Bronco ID_Count_D-"] ? parseInt(section["Bronco ID_Count_D-"]) : undefined,
     F: section["Bronco ID_Count_F"] ? parseInt(section["Bronco ID_Count_F"]) : undefined,
+    instruction: {},
   };
   newData.AvgGPA = calcAvgGPA(newData);
-  await prismaClient.section.upsert({
-    where: {
-      sectionConstraint: {
-        Term: newData.Term,
-        Subject: newData.Subject,
-        CourseNumber: newData.CourseNumber,
-        Section: newData.Section,
+
+  let { Subject, CourseNumber, InstructorFirst, InstructorLast } = newData;
+  newData.instruction = {
+    connectOrCreate: {
+      where: {
+        instructionConstraint: {
+          Subject,
+          CourseNumber,
+          InstructorFirst,
+          InstructorLast,
+        },
+      },
+      create: {
+        Subject,
+        CourseNumber,
+        InstructorFirst,
+        InstructorLast,
+        Course: {
+          connectOrCreate: {
+            where: {
+              courseConstraint: {
+                CourseNumber,
+                Subject,
+              },
+            },
+            create: {
+              CourseNumber,
+              Label: Subject + " " + CourseNumber,
+              Subject,
+            },
+          },
+        },
+        Instructor: {
+          connectOrCreate: {
+            where: {
+              instructorConstraint: {
+                InstructorFirst,
+                InstructorLast,
+              },
+            },
+            create: {
+              InstructorFirst,
+              InstructorLast,
+              Label: InstructorFirst + " " + InstructorLast,
+            },
+          },
+        },
       },
     },
-    create: newData,
-    update: newData,
-  });
+  };
+
+  return newData;
 }
 
 export async function scrapeClassHistory() {
   let sections = classHistory as { [key: string]: cppSection[] };
 
+  let data: Prisma.SectionCreateInput[] = [];
+
   for (let term in sections) {
     for (let section in sections[term]) {
-      await updateSection(sections[term][section]);
+      let parsed = await parseSection(sections[term][section]);
+      data.push(parsed);
     }
   }
+
+  let failed: Prisma.SectionCreateInput[] = [];
+
+  for (let section of data) {
+    if (section.Term && section.Subject && section.CourseNumber && section.Section) {
+      console.log("Updating", section.Term, section.Subject, section.CourseNumber, section.Section);
+      try {
+        await prismaClient.section.upsert({
+          where: {
+            sectionConstraint: {
+              Term: section.Term.toString(),
+              Subject: section.Subject.toString(),
+              CourseNumber: section.CourseNumber.toString(),
+              Section: section.Section.toString(),
+            },
+          },
+          update: section,
+          create: section,
+        });
+      } catch (e) {
+        failed.push(section);
+      }
+    }
+  }
+
+  console.log("failed updates:", failed);
+
+  // await prismaClient.$transaction(
+  //   data.reduce((arr, section) => {
+  //     if (section.Term && section.Subject && section.CourseNumber && section.Section)
+  //       arr.push(
+  //         prismaClient.section.update({
+  //           where: {
+  //             sectionConstraint: {
+  //               Term: section.Term.toString(),
+  //               Subject: section.Subject.toString(),
+  //               CourseNumber: section.CourseNumber.toString(),
+  //               Section: section.Section.toString(),
+  //             },
+  //           },
+  //           data: section,
+  //         })
+  //       );
+  //     return arr;
+  //   }, [] as any[])
+  // );
 }

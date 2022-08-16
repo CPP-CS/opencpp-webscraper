@@ -240,3 +240,34 @@ export const subjectMap = {
     },
   },
 };
+
+export let terms = {
+  "SP 2023": 2233,
+  "W 2023": 2231,
+  "F 2022": 2227,
+  "SU 2022": 2225,
+  "SP 2022": 2223,
+  "W 2022": 2221,
+  "F 2021": 2217,
+  "SU 2021": 2215,
+  "SP 2021": 2213,
+  "W 2021": 2211,
+  "F 2020": 2207,
+  "SU 2020": 2205,
+  "SP 2020": 2203,
+  "W 2020": 2201,
+  "F 2019": 2197,
+  "SU 2019": 2195,
+} as const;
+
+export let courseComponents: { [key: string]: string } = {
+  ACT: "Activity",
+  CLN: "Clinical",
+  IND: "Independent Study",
+  LAB: "Laboratory",
+  LEC: "Lecture",
+  PRA: "Practicum",
+  SEM: "Seminar",
+  SUP: "Supervision",
+  THE: "Thesis Research",
+};

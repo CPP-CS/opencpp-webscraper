@@ -19,11 +19,12 @@ export function removeJr(s: string) {
   return res;
 }
 
-export function calcAvgGPA(section: Prisma.SectionCreateInput) {
+// calc average gpa for individual sections
+export function calcAvgGPA(section: Prisma.SectionCreateInput | Prisma.SectionUpdateInput) {
+  if (!section.TotalEnrollment) return null;
   let tEnrollment = 0;
   let tPoints = 0;
-  if (!section.TotalEnrollment) return null;
-  tEnrollment += section.TotalEnrollment;
+  tEnrollment = parseInt(section.TotalEnrollment.toString());
   for (let gradeKey in GPA) {
     tPoints += GPA[gradeKey] * ((section as any)[gradeKey] || 0);
   }
@@ -31,6 +32,7 @@ export function calcAvgGPA(section: Prisma.SectionCreateInput) {
   return tPoints / tEnrollment;
 }
 
+// aggregate avg gpas from children
 export function aggregateGPA(dataPoints: { TotalEnrollment: number | null; AvgGPA: number | null }[]) {
   let totalEnrollment = 0;
   let totalGPA = 0;

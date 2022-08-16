@@ -3,39 +3,10 @@ import moment from "moment";
 import { removeInitials, removeJr } from "./utils";
 import { Prisma, Section } from "@prisma/client";
 import { prismaClient } from ".";
-import { deflateSync } from "zlib";
-let terms: { [key: number]: string } = {
-  2233: "SP 2023",
-  2231: "W 2023",
-  2227: "F 2022",
-  2225: "SU 2022",
-  2223: "SP 2022",
-  2221: "W 2022",
-  2217: "F 2021",
-  2215: "SU 2021",
-  2213: "SP 2021",
-  2211: "W 2021",
-  2207: "F 2020",
-  2205: "SU 2020",
-  2203: "SP 2020",
-  2201: "W 2020",
-  2197: "F 2019",
-  2195: "SU 2019",
-};
-let courseComponents: { [key: string]: string } = {
-  ACT: "Activity",
-  CLN: "Clinical",
-  IND: "Independent Study",
-  LAB: "Laboratory",
-  LEC: "Lecture",
-  PRA: "Practicum",
-  SEM: "Seminar",
-  SUP: "Supervision",
-  THE: "Thesis Research",
-};
+import { courseComponents, terms } from "./constants";
 
 let failedSections: Section[] = [];
-async function updateSection(section: Prisma.SectionCreateInput) {
+async function upsertSection(section: Prisma.SectionCreateInput) {
   console.log("sending to database", section.ClassNumber, section.Subject, section.CourseNumber, section.Section);
   await prismaClient.section.upsert({
     where: {
@@ -58,6 +29,8 @@ function parseDate(date: string): string {
 }
 
 async function scrapePage(page: Page, term: string, courseComponent: string) {
+  let data: Prisma.SectionCreateInput[] = [];
+
   let sections = await page.$$("#class_list>ol>li");
   for (let section of sections) {
     let Term: string = term;
@@ -96,30 +69,21 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     let time = await page.evaluate((el) => el.textContent, timeCell);
 
     let days = time.split(/\s\s\s/)[1];
-    let Sunday: boolean | undefined = undefined;
-    let Monday: boolean | undefined = undefined;
-    let Tuesday: boolean | undefined = undefined;
-    let Wednesday: boolean | undefined = undefined;
-    let Thursday: boolean | undefined = undefined;
-    let Friday: boolean | undefined = undefined;
-    let Saturday: boolean | undefined = undefined;
-    if (days !== "TBA") {
-      Sunday = false;
-      Monday = false;
-      Tuesday = false;
-      Wednesday = false;
-      Thursday = false;
-      Friday = false;
-      Saturday = false;
+    let Sunday: boolean = false;
+    let Monday: boolean = false;
+    let Tuesday: boolean = false;
+    let Wednesday: boolean = false;
+    let Thursday: boolean = false;
+    let Friday: boolean = false;
+    let Saturday: boolean = false;
 
-      if (days.includes("Su")) Sunday = true;
-      if (days.includes("M")) Monday = true;
-      if (days.includes("Tu")) Tuesday = true;
-      if (days.includes("W")) Wednesday = true;
-      if (days.includes("Th")) Thursday = true;
-      if (days.includes("F")) Friday = true;
-      if (days.includes("Sa")) Saturday = true;
-    }
+    if (days.includes("Su")) Sunday = true;
+    if (days.includes("M")) Monday = true;
+    if (days.includes("Tu")) Tuesday = true;
+    if (days.includes("W")) Wednesday = true;
+    if (days.includes("Th")) Thursday = true;
+    if (days.includes("F")) Friday = true;
+    if (days.includes("Sa")) Saturday = true;
 
     time = time.split(/(\s\s\s)/)[0];
     let StartTime: string | undefined = undefined;
@@ -132,8 +96,8 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
 
     //location
     let locationCell = await section.$("[id$='TableCell2']");
-    let Location = await page.evaluate((el) => el.textContent, locationCell);
-    if (Location == "") Location = null;
+    let Location: string | undefined = await page.evaluate((el) => el.textContent, locationCell);
+    if (Location == "") Location = undefined;
 
     //dates
     let dateCell = await section.$("[id$='TableCell12']");
@@ -145,12 +109,9 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     let instructorCell = await section.$("[id$='TableCell4']");
     let instructor = await page.evaluate((el) => el.textContent, instructorCell);
     instructor = instructor.replace(/^\s+|\s+$/g, "");
-    let InstructorFirst: string | undefined = undefined;
-    let InstructorLast: string | undefined = undefined;
-    if (instructor.includes("Staff") || instructor == "") {
-      InstructorFirst = "Staff";
-      InstructorLast = "";
-    } else {
+    let InstructorFirst: string = "Staff";
+    let InstructorLast: string = "";
+    if (!(instructor.includes("Staff") || instructor == "")) {
       InstructorLast = removeJr(instructor.split(/\n/)[0].split(/,\s/)[0]);
       InstructorFirst = removeInitials(instructor.split(/\n/)[0].split(/,\s/)[1]);
     }
@@ -160,63 +121,129 @@ async function scrapePage(page: Page, term: string, courseComponent: string) {
     let componentAndMode = await page.evaluate((el) => el.textContent, componentAndModeCell);
     let InstructionMode: string = componentAndMode.split(/,\s/)[1];
 
-    await updateSection({
+    console.log("loading", ClassNumber, Subject, CourseNumber, Section);
+    data.push({
       Term: Term,
-      Component: Component || null,
+      Component: Component,
       Subject: Subject,
       CourseNumber: CourseNumber,
       Section: Section,
-      ClassNumber: ClassNumber || null,
-      ClassCapacity: ClassCapacity || null,
-      ClassTitle: ClassTitle || null,
-      Units: Units || null,
-      Sunday: Sunday || null,
-      Monday: Monday || null,
-      Tuesday: Tuesday || null,
-      Wednesday: Wednesday || null,
-      Thursday: Thursday || null,
-      Friday: Friday || null,
-      Saturday: Saturday || null,
+      ClassNumber: ClassNumber,
+      ClassCapacity: ClassCapacity,
+      Units: Units,
+      Sunday: Sunday,
+      Monday: Monday,
+      Tuesday: Tuesday,
+      Wednesday: Wednesday,
+      Thursday: Thursday,
+      Friday: Friday,
+      Saturday: Saturday,
       StartTime: StartTime,
       EndTime: EndTime,
-      Location: Location || null,
+      Location: Location,
       StartDate: StartDate,
       EndDate: EndDate,
       InstructorFirst: InstructorFirst,
       InstructorLast: InstructorLast,
-      InstructionMode: InstructionMode || null,
+      InstructionMode: InstructionMode,
+      instruction: {
+        connectOrCreate: {
+          where: {
+            instructionConstraint: {
+              Subject,
+              CourseNumber,
+              InstructorFirst,
+              InstructorLast,
+            },
+          },
+          create: {
+            Subject,
+            CourseNumber,
+            InstructorFirst,
+            InstructorLast,
+            Course: {
+              connectOrCreate: {
+                where: {
+                  courseConstraint: {
+                    CourseNumber,
+                    Subject,
+                  },
+                },
+                create: {
+                  CourseNumber,
+                  Label: Subject + " " + CourseNumber,
+                  Subject,
+                  CourseTitle: ClassTitle,
+                },
+              },
+            },
+            Instructor: {
+              connectOrCreate: {
+                where: {
+                  instructorConstraint: {
+                    InstructorFirst,
+                    InstructorLast,
+                  },
+                },
+                create: {
+                  InstructorFirst,
+                  InstructorLast,
+                  Label: InstructorFirst + " " + InstructorLast,
+                },
+              },
+            },
+          },
+        },
+      },
     });
   }
+
+  console.log("inserting data");
+  await prismaClient.$transaction(
+    data.map((curr) =>
+      prismaClient.section.upsert({
+        where: {
+          sectionConstraint: {
+            Term: curr.Term,
+            Subject: curr.Subject,
+            CourseNumber: curr.CourseNumber,
+            Section: curr.Section,
+          },
+        },
+        update: curr,
+        create: curr,
+      })
+    )
+  );
 }
 
-export async function scrapePublicSchedule() {
+export async function scrapePublicSchedule(current?: boolean) {
+  // open launcher and go to page
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
   });
   const page = await browser.newPage();
   await page.goto("https://schedule.cpp.edu/");
-  // await page.waitForNavigation({
-  //   timeout: 300000,
-  //   waitUntil: "networkidle2",
-  // });
-  for (let termKey in terms) {
-    const term = terms[termKey];
+
+  // gets terms to be parsed
+  let currIndex = Object.entries(terms).findIndex((term) => {
+    return term[0] == process.env.CURRENT_TERM;
+  });
+  let parsingTerms = Object.entries(terms).slice(0, currIndex + 1);
+  if (process.env.MODE == "clean") parsingTerms = Object.entries(terms);
+  console.log(parsingTerms);
+
+  // scrape through each term
+  for (let [term, termKey] of parsingTerms) {
     for (let courseComponentKey in courseComponents) {
+      // input
       const courseComponent = courseComponents[courseComponentKey];
       console.log("Parsing ", term, courseComponent);
-
-      console.log("selecting term");
-      await page.select("select#ctl00_ContentPlaceHolder1_TermDDL", termKey);
-      console.log("selecting course component");
+      await page.select("select#ctl00_ContentPlaceHolder1_TermDDL", termKey.toString());
       await page.select("select#ctl00_ContentPlaceHolder1_CourseComponentDDL", courseComponentKey);
-      console.log("Finding search button");
-      let searchButton = await page.$("#ctl00_ContentPlaceHolder1_SearchButton");
 
-      // await new Promise((res) => {
-      //   setTimeout(res, 1000000000);
-      // });
-      // await page.click("#ctl00_ContentPlaceHolder1_SearchButton");
-      console.log("clicking search button");
+      // search
+      let searchButton = await page.$("#ctl00_ContentPlaceHolder1_SearchButton");
       await Promise.all([
         page.waitForNavigation({
           timeout: 300000,
@@ -225,6 +252,7 @@ export async function scrapePublicSchedule() {
         searchButton!.evaluate((b) => b.click()),
       ]);
 
+      // search results
       await scrapePage(page, term, courseComponent);
     }
   }
