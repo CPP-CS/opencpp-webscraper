@@ -1,7 +1,7 @@
 {
-  "name": "cpp-scheduler-web-scraper",
+  "name": "opencpp-webscraper",
   "version": "1.0.0",
-  "description": "",
+  "description": "web scraper and data population for opencpp api",
   "main": "index.js",
   "scripts": {
     "dev": "npx nodemon src/index.ts",
