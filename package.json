@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ZombiMigz/cpp-scheduler-web-scraper.git"
+    "url": "git+https://github.com/ZombiMigz/opencpp-webscraper.git"
   },
   "author": "Luciano Lim",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper/issues"
+    "url": "https://github.com/ZombiMigz/opencpp-webscraper/issues"
   },
-  "homepage": "https://github.com/ZombiMigz/cpp-scheduler-web-scraper#readme",
+  "homepage": "https://github.com/ZombiMigz/opencpp-webscraper#readme",
   "dependencies": {
     "@prisma/client": "^4.2.1",
     "dotenv": "^14.2.0",
