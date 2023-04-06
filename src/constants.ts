@@ -258,6 +258,10 @@ export let terms = {
   "F 2022": 2227,
   "W 2023": 2231,
   "SP 2023": 2233,
+  "SU 2023": 2235,
+  "F 2023": 2237,
+  "W 2024": 2241,
+  "SP 2024": 2243
 } as const;
 
 export let courseComponents: { [key: string]: string } = {

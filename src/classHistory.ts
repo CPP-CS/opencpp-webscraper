@@ -161,7 +161,7 @@ async function parseSection(section: cppSection): Promise<Prisma.SectionCreateIn
 }
 
 export async function scrapeClassHistory() {
-  let sections = classHistory as { [key: string]: cppSection[] };
+  let sections = classHistory as unknown as { [key: string]: cppSection[] };
 
   let data: Prisma.SectionCreateInput[] = [];
 

@@ -10,14 +10,15 @@ export const prismaClient = new PrismaClient();
 async function main() {
   if (process.env.mode == "clean") {
     console.time("timer");
-    await truncateDatabase();
-    await scrapePublicSchedule();
+    // await truncateDatabase();
+    // await scrapePublicSchedule();
     await scrapeClassHistory();
     await calcGPA();
     console.timeEnd("timer");
     return;
   }
   if (process.env.mode == "recent") {
+    await prismaClient.section.deleteMany({ where: { Term: process.env.CURRENT_TERM } });
     await scrapePublicSchedule(true);
   }
 }
