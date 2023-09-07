@@ -37,7 +37,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string): Pr
 
       // units
       let unitsCell = await section.$("[id$='TableCell9']");
-      let Units: number = eval(await page.evaluate((el) => el.textContent, unitsCell));
+      let Units: number = parseFloat(eval(await page.evaluate((el) => el.textContent, unitsCell)));
 
       // time and days
       let timeCell = await section.$("[id$='TableCell1']");

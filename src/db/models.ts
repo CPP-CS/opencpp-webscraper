@@ -25,7 +25,7 @@ import {
   NonAttribute,
 } from "sequelize";
 import { sequelize } from "./connection";
-import { addGPAData, calcGPAData, validateGradePoints } from "../utils";
+import { addGPAData, calcGPAData, removeGPAData } from "./utils";
 
 export class Term extends Model<InferAttributes<Term, { omit: "sections" }>, InferCreationAttributes<Term>> {
   declare id: CreationOptional<number>;
@@ -240,7 +240,7 @@ Course.init(
       defaultValue: false,
     },
     Units: {
-      type: DataTypes.INET,
+      type: DataTypes.FLOAT,
       allowNull: true,
     },
     AvgGPA: DataTypes.FLOAT,
@@ -275,6 +275,9 @@ export class Instruction extends Model<
 
   declare AvgGPA: number | null;
   declare GradePoints: number;
+
+  // This is necessary to access previous grade values in hooks.
+  declare _previousDataValues: NonAttribute<Instruction>;
 
   declare sections?: NonAttribute<Section[]>;
   declare getSections: HasManyGetAssociationsMixin<Section>;
@@ -326,6 +329,42 @@ Instruction.init(
       },
     ],
     hooks: {
+      beforeUpdate: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      beforeSave: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      beforeUpsert: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      afterDestroy: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
       afterSave: async (instruction) => {
         if (!instruction.AvgGPA) return;
         let course = await instruction.getCourse();
@@ -344,14 +383,23 @@ Instruction.init(
         let professor = await instruction.getProfessor();
         await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
       },
-      afterDestroy: async (instruction) => {
+      afterCreate: async (instruction) => {
         if (!instruction.AvgGPA) return;
         let course = await instruction.getCourse();
         await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
 
         if (!instruction.ProfessorId) return;
         let professor = await instruction.getProfessor();
-        await addGPAData(instruction.AvgGPA, -instruction.GradePoints, professor);
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      afterUpdate: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
       },
     },
     // validate: {
@@ -381,6 +429,9 @@ export class Section extends Model<
   // id, but sequelize doesn't support this for now. This is a temp fix by storing
   // the subject+course string on the section table as well.
   declare Course: string;
+
+  // This is necessary to access previous grade values in hooks.
+  declare _previousDataValues: NonAttribute<Section>;
 
   declare TermId: ForeignKey<Term["id"]>;
   declare term?: NonAttribute<Term>;
@@ -459,6 +510,26 @@ Section.init(
       },
     ],
     hooks: {
+      beforeSave: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      beforeUpdate: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      beforeUpsert: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      afterDestroy: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
       afterSave: async (section) => {
         if (!section.AvgGPA) return;
         let instruction = await section.getInstruction();
@@ -469,10 +540,15 @@ Section.init(
         let instruction = await section.getInstruction();
         await addGPAData(section.AvgGPA, section.GradePoints, instruction);
       },
-      afterDestroy: async (section) => {
+      afterUpdate: async (section) => {
         if (!section.AvgGPA) return;
         let instruction = await section.getInstruction();
-        await addGPAData(section.AvgGPA, -section.GradePoints, instruction);
+        await addGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      afterCreate: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await addGPAData(section.AvgGPA, section.GradePoints, instruction);
       },
     },
     // validate: {
@@ -501,6 +577,9 @@ export class GradeData extends Model<
   declare D: CreationOptional<number>;
   declare Dm: CreationOptional<number>;
   declare F: CreationOptional<number>;
+
+  // This is necessary to access previous grade values in hooks.
+  declare _previousDataValues: NonAttribute<GradeData>;
 
   declare SectionId: ForeignKey<Section["id"]>;
   declare section?: NonAttribute<Section>;
@@ -587,7 +666,39 @@ GradeData.init(
     sequelize,
     modelName: "GradeData",
     hooks: {
+      beforeSave: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
+        await removeGPAData(avgGPA, gradePoints, section);
+      },
+      beforeUpsert: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
+        await removeGPAData(avgGPA, gradePoints, section);
+      },
+      beforeUpdate: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
+        await removeGPAData(avgGPA, gradePoints, section);
+      },
+      beforeDestroy: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await removeGPAData(avgGPA, gradePoints, section);
+      },
+      afterCreate: async (gradeData) => {
+        gradeData.previous();
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await addGPAData(avgGPA, gradePoints, section);
+      },
       afterSave: async (gradeData) => {
+        gradeData.previous();
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await addGPAData(avgGPA, gradePoints, section);
+      },
+      afterUpdate: async (gradeData) => {
         let section = await gradeData.getSection();
         let [avgGPA, gradePoints] = calcGPAData(gradeData);
         await addGPAData(avgGPA, gradePoints, section);
@@ -596,11 +707,6 @@ GradeData.init(
         let section = await gradeData.getSection();
         let [avgGPA, gradePoints] = calcGPAData(gradeData);
         await addGPAData(avgGPA, gradePoints, section);
-      },
-      afterDestroy: async (gradeData) => {
-        let section = await gradeData.getSection();
-        let [avgGPA, gradePoints] = calcGPAData(gradeData);
-        await addGPAData(avgGPA, -gradePoints, section);
       },
     },
   }

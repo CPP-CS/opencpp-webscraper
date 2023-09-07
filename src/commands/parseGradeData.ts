@@ -1,8 +1,7 @@
 import { loadModels } from "../db/models";
 import { scrapeClassHistory } from "../gradeData/parse";
-import { runAsync } from "../utils";
 
-runAsync(async () => {
+(async () => {
   loadModels();
   await scrapeClassHistory();
-});
+})();

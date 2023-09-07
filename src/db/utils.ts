@@ -1,5 +1,6 @@
 import { CreationAttributes } from "sequelize";
 import { Term, Section, Subject, Course, Professor, Event, Location, GradeData, Instruction } from "./models";
+import { GPA } from "../constants";
 
 export type SectionData = Omit<
   CreationAttributes<Section> & {
@@ -36,6 +37,7 @@ export const upsertSection = async (sectionData: SectionData) => {
               CourseType: sectionData.course.CourseType,
               CourseTitle: sectionData.course.CourseTitle,
               CreditOnly: sectionData.course.CreditOnly,
+              Units: sectionData.course.Units,
               SubjectId: (await Subject.upsert(sectionData.course.subject))[0].id,
             })
           )[0].id,
@@ -68,3 +70,48 @@ export const upsertSection = async (sectionData: SectionData) => {
     });
   }
 };
+
+// calc average gpa and count data points for GradeData
+export function calcGPAData(gradeData: GradeData): [number, number] {
+  let tEnrollment = 0;
+  let tPoints = 0;
+  for (let gradeKey in GPA) {
+    tEnrollment += (gradeData as any)[gradeKey];
+    tPoints += GPA[gradeKey] * (gradeData as any)[gradeKey];
+  }
+  return [tPoints / tEnrollment, tEnrollment];
+}
+
+// Adds gpa/data point count to an object. If gradePoints is negative, remove
+export async function addGPAData(
+  avgGpa: number,
+  gradePoints: number,
+  model: Section | Instruction | Course | Professor
+) {
+  let { AvgGPA, GradePoints } = model;
+  let tPoints: number = AvgGPA ? AvgGPA * GradePoints : 0;
+
+  model.GradePoints += gradePoints;
+
+  if (model.GradePoints === 0) {
+    model.AvgGPA = null;
+  } else {
+    model.AvgGPA = (tPoints + avgGpa * gradePoints) / model.GradePoints;
+  }
+
+  await model.save();
+}
+
+export async function removeGPAData(
+  avgGpa: number,
+  gradePoints: number,
+  model: Section | Instruction | Course | Professor
+) {
+  await addGPAData(avgGpa, -gradePoints, model);
+}
+
+// Makes sure GradePoints is 0 when avgGpa is null, otherwise some logic error occurred
+export function validateGradePoints(model: Section | Instruction | Course | Professor) {
+  if (model.AvgGPA === null && model.GradePoints !== 0)
+    throw new Error(`AvgGpa is null and Gradepoints is ${model.GradePoints} on ${JSON.stringify(model)}`);
+}
