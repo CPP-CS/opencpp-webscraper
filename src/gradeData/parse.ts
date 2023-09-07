@@ -1,9 +1,9 @@
 import moment from "moment";
-import classHistory from "./classHistory.json";
+import classHistory from "./data.json";
 import { SectionData, upsertSection } from "../db/utils";
 import { staggerPromises } from "../utils";
 
-export interface cppSection {
+export interface SectionFormat {
   Term: string | undefined;
   "Academic Group": string | undefined;
   "Academic Org": string | undefined;
@@ -66,7 +66,7 @@ function fixSubject(subject: string): string {
       return subject;
   }
 }
-function parseSection(section: cppSection): SectionData {
+function parseSection(section: SectionFormat): SectionData {
   console.log("Loading", section.Term, section["Class Number"]);
 
   let StartTime = section["Class Start Time"] ? parseTime(section["Class Start Time"]) : undefined;
@@ -129,13 +129,11 @@ function parseSection(section: cppSection): SectionData {
 }
 
 export async function scrapeClassHistory() {
-  let sections = classHistory as unknown as { [key: string]: cppSection[] };
+  let sections = classHistory as unknown as SectionFormat[];
   let data: SectionData[] = [];
 
-  for (let term in sections) {
-    for (let section in sections[term]) {
-      data.push(parseSection(sections[term][section]));
-    }
+  for (let section in sections) {
+    data.push(parseSection(sections[section]));
   }
 
   let failed: SectionData[] = [];

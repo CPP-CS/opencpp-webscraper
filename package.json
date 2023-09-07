@@ -8,7 +8,8 @@
     "scrapePublicSchedule": "ts-node ./src/commands/scrapePublicSchedule",
     "scrapeCurrentSchedule": "ts-node ./src/commands/scrapeCurrentSchedule",
     "dropAllTables": "ts-node ./src/commands/dropAllTables.ts",
-    "parseGradeData": "ts-node ./src/commands/parseGradeData.ts"
+    "parseGradeData": "ts-node ./src/commands/parseGradeData.ts",
+    "convertToJson": "ts-node ./src/commands/convertToJson.ts"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://github.com/ZombiMigz/opencpp-webscraper#readme",
   "devDependencies": {
+    "@types/node": "^20.5.9",
     "typescript": "^5.2.2"
   },
   "dependencies": {
@@ -30,6 +32,7 @@
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
     "puppeteer": "^21.1.1",
+    "read-excel-file": "^5.6.1",
     "sequelize": "^6.32.1",
     "ts-node": "^10.9.1"
   }
