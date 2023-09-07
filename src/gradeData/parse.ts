@@ -1,6 +1,7 @@
 import moment from "moment";
 import classHistory from "./classHistory.json";
 import { SectionData, upsertSection } from "../db/utils";
+import { staggerPromises } from "../utils";
 
 export interface cppSection {
   Term: string | undefined;
@@ -137,33 +138,35 @@ export async function scrapeClassHistory() {
     }
   }
 
-  console.log("Queuering Queries");
   let failed: SectionData[] = [];
-  let promises: Promise<void>[] = data.map(async (section, ind) => {
-    try {
-      await upsertSection(section);
-      console.log(
-        `Updating [${ind + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject,
-        section.course.CourseNumber,
-        section.SectionNumber
-      );
-    } catch (e) {
-      console.log(
-        `Failed [${ind + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject,
-        section.course.CourseNumber,
-        section.SectionNumber,
-        e
-      );
-      failed.push(section);
-    }
-  });
 
-  console.log("Awaiting query completion");
-  await Promise.all(promises);
+  console.log("Loading Promises");
+  await staggerPromises(
+    data,
+    async (section, ind) => {
+      try {
+        await upsertSection(section);
+        console.log(
+          `Updating [${ind + 1} / ${data.length}]`,
+          section.term.TermName,
+          section.course.subject.Subject,
+          section.course.CourseNumber,
+          section.SectionNumber
+        );
+      } catch (e) {
+        console.log(
+          `Failed [${ind + 1} / ${data.length}]`,
+          section.term.TermName,
+          section.course.subject.Subject,
+          section.course.CourseNumber,
+          section.SectionNumber,
+          e
+        );
+        failed.push(section);
+      }
+    },
+    1000
+  );
 
   console.log("failed updates:", failed);
 }

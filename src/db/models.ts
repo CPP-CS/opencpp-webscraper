@@ -25,6 +25,7 @@ import {
   NonAttribute,
 } from "sequelize";
 import { sequelize } from "./connection";
+import { addGPAData, calcGPAData, validateGradePoints } from "../utils";
 
 export class Term extends Model<InferAttributes<Term, { omit: "sections" }>, InferCreationAttributes<Term>> {
   declare id: CreationOptional<number>;
@@ -78,29 +79,31 @@ Term.init(
 );
 
 export class Professor extends Model<
-  InferAttributes<Professor, { omit: "sections" }>,
-  InferCreationAttributes<Professor>
+  InferAttributes<Professor, { omit: "instructions" }>,
+  InferCreationAttributes<Professor, { omit: "AvgGPA" | "GradePoints" }>
 > {
   declare id: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
   declare Name: string;
+  declare AvgGPA: number | null;
+  declare GradePoints: number;
 
-  declare sections?: NonAttribute<Section[]>;
-  declare getSections: HasManyGetAssociationsMixin<Section>;
-  declare addSection: HasManyAddAssociationMixin<Section, number>;
-  declare addSections: HasManyAddAssociationsMixin<Section, number>;
-  declare setSections: HasManySetAssociationsMixin<Section, number>;
-  declare removeSection: HasManyRemoveAssociationMixin<Section, number>;
-  declare removeSections: HasManyRemoveAssociationsMixin<Section, number>;
-  declare hasSection: HasManyHasAssociationMixin<Section, number>;
-  declare hasSections: HasManyHasAssociationsMixin<Section, number>;
-  declare countSections: HasManyCountAssociationsMixin;
-  declare createSection: HasManyCreateAssociationMixin<Section, "ProfessorId">;
+  declare instructions?: NonAttribute<Instruction[]>;
+  declare getInstructions: HasManyGetAssociationsMixin<Instruction>;
+  declare addInstruction: HasManyAddAssociationMixin<Instruction, number>;
+  declare addInstructions: HasManyAddAssociationsMixin<Instruction, number>;
+  declare setInstructions: HasManySetAssociationsMixin<Instruction, number>;
+  declare removeInstruction: HasManyRemoveAssociationMixin<Instruction, number>;
+  declare removeInstructions: HasManyRemoveAssociationsMixin<Instruction, number>;
+  declare hasInstruction: HasManyHasAssociationMixin<Instruction, number>;
+  declare hasInstructions: HasManyHasAssociationsMixin<Instruction, number>;
+  declare countInstructions: HasManyCountAssociationsMixin;
+  declare createInstruction: HasManyCreateAssociationMixin<Instruction, "ProfessorId">;
 
   declare static associations: {
-    sections: Association<Term, Section>;
+    instructions: Association<Term, Instruction>;
   };
 }
 Professor.init(
@@ -117,8 +120,20 @@ Professor.init(
       allowNull: false,
       unique: true,
     },
+    AvgGPA: DataTypes.FLOAT,
+    GradePoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
-  { sequelize, modelName: "Professor" }
+  {
+    sequelize,
+    modelName: "Professor",
+    // validate: {
+    //   validateGradePoints: validateGradePoints,
+    // },
+  }
 );
 
 export class Subject extends Model<InferAttributes<Subject, { omit: "courses" }>, InferCreationAttributes<Subject>> {
@@ -129,7 +144,7 @@ export class Subject extends Model<InferAttributes<Subject, { omit: "courses" }>
   declare Subject: string;
 
   declare courses?: NonAttribute<Course[]>;
-  declare getSections: HasManyGetAssociationsMixin<Course>;
+  declare getCourses: HasManyGetAssociationsMixin<Course>;
   declare addCourse: HasManyAddAssociationMixin<Course, number>;
   declare addCourses: HasManyAddAssociationsMixin<Course, number>;
   declare setCourses: HasManySetAssociationsMixin<Course, number>;
@@ -163,8 +178,8 @@ Subject.init(
 );
 
 export class Course extends Model<
-  InferAttributes<Course, { omit: "subject" | "sections" }>,
-  InferCreationAttributes<Course>
+  InferAttributes<Course, { omit: "subject" | "instructions" }>,
+  InferCreationAttributes<Course, { omit: "AvgGPA" | "GradePoints" }>
 > {
   declare id: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
@@ -175,6 +190,8 @@ export class Course extends Model<
   declare CourseTitle: CreationOptional<string>;
   declare CreditOnly: CreationOptional<boolean>;
   declare Units?: CreationOptional<number>;
+  declare AvgGPA: number | null;
+  declare GradePoints: number;
 
   declare SubjectId: ForeignKey<Subject["id"]>;
   declare subject?: NonAttribute<Subject>;
@@ -182,20 +199,20 @@ export class Course extends Model<
   declare setSubject: BelongsToSetAssociationMixin<Subject, Subject["id"]>;
   declare createSubject: BelongsToCreateAssociationMixin<Subject>;
 
-  declare sections?: NonAttribute<Section[]>;
-  declare getSections: HasManyGetAssociationsMixin<Section>;
-  declare addSection: HasManyAddAssociationMixin<Section, number>;
-  declare addSections: HasManyAddAssociationsMixin<Section, number>;
-  declare setSections: HasManySetAssociationsMixin<Section, number>;
-  declare removeSection: HasManyRemoveAssociationMixin<Section, number>;
-  declare removeSections: HasManyRemoveAssociationsMixin<Section, number>;
-  declare hasSection: HasManyHasAssociationMixin<Section, number>;
-  declare hasSections: HasManyHasAssociationsMixin<Section, number>;
-  declare countSections: HasManyCountAssociationsMixin;
-  declare createSection: HasManyCreateAssociationMixin<Section, "CourseId">;
+  declare instructions?: NonAttribute<Instruction[]>;
+  declare getInstructions: HasManyGetAssociationsMixin<Instruction>;
+  declare addInstruction: HasManyAddAssociationMixin<Instruction, number>;
+  declare addInstructions: HasManyAddAssociationsMixin<Instruction, number>;
+  declare setInstructions: HasManySetAssociationsMixin<Instruction, number>;
+  declare removeInstruction: HasManyRemoveAssociationMixin<Instruction, number>;
+  declare removeInstructions: HasManyRemoveAssociationsMixin<Instruction, number>;
+  declare hasInstruction: HasManyHasAssociationMixin<Instruction, number>;
+  declare hasInstructions: HasManyHasAssociationsMixin<Instruction, number>;
+  declare countInstructions: HasManyCountAssociationsMixin;
+  declare createInstruction: HasManyCreateAssociationMixin<Instruction, "CourseId">;
 
   declare static associations: {
-    sections: Association<Term, Section>;
+    Instructions: Association<Term, Instruction>;
   };
 }
 Course.init(
@@ -226,6 +243,12 @@ Course.init(
       type: DataTypes.INET,
       allowNull: true,
     },
+    AvgGPA: DataTypes.FLOAT,
+    GradePoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,
@@ -236,28 +259,34 @@ Course.init(
         unique: true,
       },
     ],
+    // validate: {
+    //   validateGradePoints: validateGradePoints,
+    // },
   }
 );
 
-export class Section extends Model<
-  InferAttributes<Section, { omit: "term" | "professor" | "course" | "event" | "gradeData" }>,
-  InferCreationAttributes<Section>
+export class Instruction extends Model<
+  InferAttributes<Instruction, { omit: "sections" | "course" | "professor" }>,
+  InferCreationAttributes<Instruction, { omit: "AvgGPA" | "GradePoints" }>
 > {
   declare id: CreationOptional<number>;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
-  declare TotalCapacity: number;
-  declare TotalEnrollment: number | undefined;
-  declare InstructionMode: string;
-  declare SectionNumber: string;
-  declare ClassNumber: number;
+  declare AvgGPA: number | null;
+  declare GradePoints: number;
 
-  declare TermId: ForeignKey<Term["id"]>;
-  declare term?: NonAttribute<Term>;
-  declare getTerm: BelongsToGetAssociationMixin<Term>;
-  declare setTerm: BelongsToSetAssociationMixin<Term, Term["id"]>;
-  declare createTerm: BelongsToCreateAssociationMixin<Term>;
+  declare sections?: NonAttribute<Section[]>;
+  declare getSections: HasManyGetAssociationsMixin<Section>;
+  declare addSection: HasManyAddAssociationMixin<Section, number>;
+  declare addSections: HasManyAddAssociationsMixin<Section, number>;
+  declare setSections: HasManySetAssociationsMixin<Section, number>;
+  declare removeSection: HasManyRemoveAssociationMixin<Section, number>;
+  declare removeSections: HasManyRemoveAssociationsMixin<Section, number>;
+  declare hasSection: HasManyHasAssociationMixin<Section, number>;
+  declare hasSections: HasManyHasAssociationsMixin<Section, number>;
+  declare countSections: HasManyCountAssociationsMixin;
+  declare createSection: HasManyCreateAssociationMixin<Section, "InstructionId">;
 
   declare CourseId: ForeignKey<Course["id"]>;
   declare course?: NonAttribute<Course>;
@@ -270,6 +299,100 @@ export class Section extends Model<
   declare getProfessor: BelongsToGetAssociationMixin<Professor>;
   declare setProfessor: BelongsToSetAssociationMixin<Professor, Professor["id"]>;
   declare createProfessor: BelongsToCreateAssociationMixin<Professor>;
+}
+Instruction.init(
+  {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    createdAt: DataTypes.DATE,
+    updatedAt: DataTypes.DATE,
+    AvgGPA: DataTypes.FLOAT,
+    GradePoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+  },
+  {
+    sequelize,
+    modelName: "Instruction",
+    indexes: [
+      {
+        fields: ["ProfessorId", "CourseId"],
+        unique: true,
+      },
+    ],
+    hooks: {
+      afterSave: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      afterUpsert: async ([instruction]) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+      },
+      afterDestroy: async (instruction) => {
+        if (!instruction.AvgGPA) return;
+        let course = await instruction.getCourse();
+        await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await instruction.getProfessor();
+        await addGPAData(instruction.AvgGPA, -instruction.GradePoints, professor);
+      },
+    },
+    // validate: {
+    //   validateGradePoints: validateGradePoints,
+    // },
+  }
+);
+
+export class Section extends Model<
+  InferAttributes<Section, { omit: "term" | "instruction" | "event" | "gradeData" }>,
+  InferCreationAttributes<Section, { omit: "AvgGPA" | "GradePoints" }>
+> {
+  declare id: CreationOptional<number>;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: CreationOptional<Date>;
+
+  declare TotalCapacity: number;
+  declare TotalEnrollment: number | undefined;
+  declare InstructionMode: string;
+  declare SectionNumber: string;
+  declare ClassNumber: number;
+  declare AvgGPA: number | null;
+  declare GradePoints: number;
+
+  // This is necessary for the unique constraint. The proper way to do this
+  // is make the foreign key for Instructions a composite of Course & Professor
+  // id, but sequelize doesn't support this for now. This is a temp fix by storing
+  // the subject+course string on the section table as well.
+  declare Course: string;
+
+  declare TermId: ForeignKey<Term["id"]>;
+  declare term?: NonAttribute<Term>;
+  declare getTerm: BelongsToGetAssociationMixin<Term>;
+  declare setTerm: BelongsToSetAssociationMixin<Term, Term["id"]>;
+  declare createTerm: BelongsToCreateAssociationMixin<Term>;
+
+  declare InstructionId: ForeignKey<Instruction["id"]>;
+  declare instruction?: NonAttribute<Instruction>;
+  declare getInstruction: BelongsToGetAssociationMixin<Instruction>;
+  declare setInstruction: BelongsToSetAssociationMixin<Instruction, Instruction["id"]>;
+  declare createInstruction: BelongsToCreateAssociationMixin<Instruction>;
 
   declare EventId?: ForeignKey<Event["id"]>;
   declare event?: NonAttribute<Event>;
@@ -307,6 +430,10 @@ Section.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    Course: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
     SectionNumber: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -315,16 +442,42 @@ Section.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    AvgGPA: DataTypes.FLOAT,
+    GradePoints: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,
     modelName: "Section",
     indexes: [
       {
-        fields: ["CourseId", "TermId", "SectionNumber"],
+        fields: ["Course", "TermId", "SectionNumber"],
         unique: true,
       },
     ],
+    hooks: {
+      afterSave: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await addGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      afterUpsert: async ([section]) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await addGPAData(section.AvgGPA, section.GradePoints, instruction);
+      },
+      afterDestroy: async (section) => {
+        if (!section.AvgGPA) return;
+        let instruction = await section.getInstruction();
+        await addGPAData(section.AvgGPA, -section.GradePoints, instruction);
+      },
+    },
+    // validate: {
+    //   validateGradePoints: validateGradePoints,
+    // },
   }
 );
 
@@ -349,7 +502,7 @@ export class GradeData extends Model<
   declare Dm: CreationOptional<number>;
   declare F: CreationOptional<number>;
 
-  declare SectionId?: ForeignKey<Section["id"]>;
+  declare SectionId: ForeignKey<Section["id"]>;
   declare section?: NonAttribute<Section>;
   declare getSection: BelongsToGetAssociationMixin<Section>;
   declare setSection: BelongsToSetAssociationMixin<Section, Section["id"]>;
@@ -424,8 +577,33 @@ GradeData.init(
       defaultValue: 0,
       allowNull: false,
     },
+    SectionId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      unique: true,
+    },
   },
-  { sequelize, modelName: "GradeData" }
+  {
+    sequelize,
+    modelName: "GradeData",
+    hooks: {
+      afterSave: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await addGPAData(avgGPA, gradePoints, section);
+      },
+      afterUpsert: async ([gradeData]) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await addGPAData(avgGPA, gradePoints, section);
+      },
+      afterDestroy: async (gradeData) => {
+        let section = await gradeData.getSection();
+        let [avgGPA, gradePoints] = calcGPAData(gradeData);
+        await addGPAData(avgGPA, -gradePoints, section);
+      },
+    },
+  }
 );
 
 export class Location extends Model<InferAttributes<Location, { omit: "events" }>, InferCreationAttributes<Location>> {
@@ -580,11 +758,11 @@ Course.belongsTo(Subject, {
   as: "subject",
 });
 
-Course.hasMany(Section, {
+Course.hasMany(Instruction, {
   onDelete: "RESTRICT",
-  as: "sections",
+  as: "instructions",
 });
-Section.belongsTo(Course, {
+Instruction.belongsTo(Course, {
   foreignKey: {
     allowNull: false,
     name: "CourseId",
@@ -604,16 +782,28 @@ Section.belongsTo(Term, {
   as: "term",
 });
 
-Professor.hasMany(Section, {
+Professor.hasMany(Instruction, {
   onDelete: "RESTRICT",
-  as: "sections",
+  as: "instructions",
 });
-Section.belongsTo(Professor, {
+Instruction.belongsTo(Professor, {
   foreignKey: {
     name: "ProfessorId",
     allowNull: true,
   },
   as: "professor",
+});
+
+Instruction.hasMany(Section, {
+  onDelete: "RESTRICT",
+  as: "sections",
+});
+Section.belongsTo(Instruction, {
+  foreignKey: {
+    name: "InstructionId",
+    allowNull: false,
+  },
+  as: "instruction",
 });
 
 Section.hasOne(GradeData, {

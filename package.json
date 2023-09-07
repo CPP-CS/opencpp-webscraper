@@ -6,6 +6,7 @@
   "scripts": {
     "syncModels": "ts-node ./src/commands/syncModels",
     "scrapePublicSchedule": "ts-node ./src/commands/scrapePublicSchedule",
+    "scrapeCurrentSchedule": "ts-node ./src/commands/scrapeCurrentSchedule",
     "dropAllTables": "ts-node ./src/commands/dropAllTables.ts",
     "parseGradeData": "ts-node ./src/commands/parseGradeData.ts"
   },

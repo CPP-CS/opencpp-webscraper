@@ -1,17 +1,20 @@
 import { CreationAttributes } from "sequelize";
-import { Term, Section, Subject, Course, Professor, Event, Location, GradeData } from "./models";
+import { Term, Section, Subject, Course, Professor, Event, Location, GradeData, Instruction } from "./models";
 
-export type SectionData = CreationAttributes<Section> & {
-  term: CreationAttributes<Term>;
-  course: CreationAttributes<Course> & {
-    subject: CreationAttributes<Subject>;
-  };
-  professor?: CreationAttributes<Professor>;
-  gradeData?: CreationAttributes<GradeData>;
-  event?: CreationAttributes<Event> & {
-    location?: CreationAttributes<Location>;
-  };
-};
+export type SectionData = Omit<
+  CreationAttributes<Section> & {
+    term: CreationAttributes<Term>;
+    course: CreationAttributes<Course> & {
+      subject: CreationAttributes<Subject>;
+    };
+    professor?: CreationAttributes<Professor>;
+    gradeData?: CreationAttributes<GradeData>;
+    event?: CreationAttributes<Event> & {
+      location?: CreationAttributes<Location>;
+    };
+  },
+  "Course"
+>;
 
 // Populates tables based on an individual section. Note that certain fields are optional.
 export const upsertSection = async (sectionData: SectionData) => {
@@ -22,17 +25,22 @@ export const upsertSection = async (sectionData: SectionData) => {
       TotalCapacity: sectionData.TotalCapacity,
       InstructionMode: sectionData.InstructionMode,
       ClassNumber: sectionData.ClassNumber,
+      Course: sectionData.course.subject.Subject + sectionData.course.CourseNumber,
       TermId: (await Term.upsert(sectionData.term))[0].id,
-      CourseId: (
-        await Course.upsert({
-          CourseNumber: sectionData.course.CourseNumber,
-          CourseType: sectionData.course.CourseType,
-          CourseTitle: sectionData.course.CourseTitle,
-          CreditOnly: sectionData.course.CreditOnly,
-          SubjectId: (await Subject.upsert(sectionData.course.subject))[0].id,
+      InstructionId: (
+        await Instruction.upsert({
+          ProfessorId: sectionData.professor ? (await Professor.upsert(sectionData.professor))[0].id : undefined,
+          CourseId: (
+            await Course.upsert({
+              CourseNumber: sectionData.course.CourseNumber,
+              CourseType: sectionData.course.CourseType,
+              CourseTitle: sectionData.course.CourseTitle,
+              CreditOnly: sectionData.course.CreditOnly,
+              SubjectId: (await Subject.upsert(sectionData.course.subject))[0].id,
+            })
+          )[0].id,
         })
       )[0].id,
-      ProfessorId: sectionData.professor ? (await Professor.upsert(sectionData.professor))[0].id : undefined,
     })
   )[0];
 

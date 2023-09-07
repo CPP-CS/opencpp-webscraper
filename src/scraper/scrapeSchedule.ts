@@ -121,7 +121,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string): Pr
           },
         },
         professor: {
-          Name: instructor,
+          Name: instructor ?? "Staff",
         },
         event:
           StartTime && EndTime
