@@ -1,4 +1,4 @@
-import { CreationAttributes } from "sequelize";
+import { CreationAttributes, Model } from "sequelize";
 import { Term, Section, Subject, Course, Professor, Event, Location, GradeData, Instruction } from "./models";
 import { GPA } from "../constants";
 
@@ -8,7 +8,7 @@ export type SectionData = Omit<
     course: CreationAttributes<Course> & {
       subject: CreationAttributes<Subject>;
     };
-    professor?: CreationAttributes<Professor>;
+    professor: CreationAttributes<Professor>;
     gradeData?: CreationAttributes<GradeData>;
     event?: CreationAttributes<Event> & {
       location?: CreationAttributes<Location>;
@@ -30,7 +30,7 @@ export const upsertSection = async (sectionData: SectionData) => {
       TermId: (await Term.upsert(sectionData.term))[0].id,
       InstructionId: (
         await Instruction.upsert({
-          ProfessorId: sectionData.professor ? (await Professor.upsert(sectionData.professor))[0].id : undefined,
+          ProfessorId: (await Professor.upsert(sectionData.professor))[0].id,
           CourseId: (
             await Course.upsert({
               CourseNumber: sectionData.course.CourseNumber,

@@ -43,9 +43,13 @@ const map = {
   "Bronco ID_Count_F": "Bronco ID_Count_F",
 };
 
-readXlsxFile(fs.createReadStream("./src/gradeData/data.xlsx"), { map }).then(({ rows, errors }) => {
-  if (errors.length !== 0) {
-    console.log("Errors:", errors);
-  }
-  fs.writeFileSync("./src/gradeData/data.json", JSON.stringify(rows));
-});
+export const convertToJson = async () => {
+  await readXlsxFile(fs.createReadStream("./src/gradeData/data.xlsx"), { map }).then(({ rows, errors }) => {
+    if (errors.length !== 0) {
+      console.log("Errors:", errors);
+    }
+    fs.writeFileSync("./src/gradeData/data.json", JSON.stringify(rows));
+  });
+};
+
+convertToJson();

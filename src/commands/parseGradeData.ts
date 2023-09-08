@@ -1,7 +1,8 @@
 import { loadModels } from "../db/models";
 import { scrapeClassHistory } from "../gradeData/parse";
 
-(async () => {
+export const parseGradeData = async () => {
   loadModels();
   await scrapeClassHistory();
-})();
+};
+parseGradeData();

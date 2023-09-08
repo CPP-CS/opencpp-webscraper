@@ -9,7 +9,11 @@
     "scrapeCurrentSchedule": "ts-node ./src/commands/scrapeCurrentSchedule",
     "dropAllTables": "ts-node ./src/commands/dropAllTables.ts",
     "parseGradeData": "ts-node ./src/commands/parseGradeData.ts",
-    "convertToJson": "ts-node ./src/commands/convertToJson.ts"
+    "convertToJson": "ts-node ./src/commands/convertToJson.ts",
+    "truncateAllTables": "ts-node ./src/commands/truncateAllTables",
+    "calcGradeData": "ts-node ./src/commands/calcGradeData",
+    "rebuildEverything": "npm run dropAllTables && npm run syncModels && npm run scrapePublicSchedule && npm run parseGradeData",
+    "test": "cross-env ENV=test mocha 'test/**/*.ts' --recursive --require ts-node/register --reporter spec"
   },
   "repository": {
     "type": "git",
@@ -23,11 +27,14 @@
   },
   "homepage": "https://github.com/ZombiMigz/opencpp-webscraper#readme",
   "devDependencies": {
+    "@types/mocha": "^10.0.1",
     "@types/node": "^20.5.9",
+    "cross-env": "^7.0.3",
     "typescript": "^5.2.2"
   },
   "dependencies": {
     "dotenv": "^16.3.1",
+    "mocha": "^10.2.0",
     "moment": "^2.29.4",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",

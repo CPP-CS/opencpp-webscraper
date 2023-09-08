@@ -297,7 +297,7 @@ export class Instruction extends Model<
   declare setCourse: BelongsToSetAssociationMixin<Course, Course["id"]>;
   declare createCourse: BelongsToCreateAssociationMixin<Course>;
 
-  declare ProfessorId?: ForeignKey<Professor["id"]>;
+  declare ProfessorId: ForeignKey<Professor["id"]>;
   declare professor?: NonAttribute<Professor>;
   declare getProfessor: BelongsToGetAssociationMixin<Professor>;
   declare setProfessor: BelongsToSetAssociationMixin<Professor, Professor["id"]>;
@@ -329,32 +329,45 @@ Instruction.init(
       },
     ],
     hooks: {
-      beforeUpdate: async (instruction) => {
-        if (!instruction.AvgGPA) return;
-        let course = await instruction.getCourse();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
-
-        if (!instruction.ProfessorId) return;
-        let professor = await instruction.getProfessor();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
-      },
-      beforeSave: async (instruction) => {
-        if (!instruction.AvgGPA) return;
-        let course = await instruction.getCourse();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
-
-        if (!instruction.ProfessorId) return;
-        let professor = await instruction.getProfessor();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
-      },
       beforeUpsert: async (instruction) => {
-        if (!instruction.AvgGPA) return;
-        let course = await instruction.getCourse();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, course);
+        let oldInstruction = await Instruction.findOne({
+          where: {
+            CourseId: instruction.CourseId,
+            ProfessorId: instruction.ProfessorId,
+          },
+        });
+        if (!oldInstruction?.AvgGPA) return;
+
+        let course = await Course.findByPk(instruction.CourseId);
+        if (!course)
+          throw new Error(`No Course found corresponding to Instruction ${JSON.stringify(instruction.toJSON())}`);
+        await removeGPAData(oldInstruction.AvgGPA, oldInstruction.GradePoints, course);
 
         if (!instruction.ProfessorId) return;
-        let professor = await instruction.getProfessor();
-        await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
+        let professor = await Professor.findByPk(instruction.ProfessorId);
+        if (!professor)
+          throw new Error(`No Professr found corresponding to Instruction ${JSON.stringify(instruction.toJSON())}`);
+        await removeGPAData(oldInstruction.AvgGPA, oldInstruction.GradePoints, professor);
+      },
+      beforeUpdate: async (instruction) => {
+        let oldInstruction = await Instruction.findOne({
+          where: {
+            CourseId: instruction.CourseId,
+            ProfessorId: instruction.ProfessorId,
+          },
+        });
+        if (!oldInstruction?.AvgGPA) return;
+
+        let course = await Course.findByPk(instruction.CourseId);
+        if (!course)
+          throw new Error(`No Course found corresponding to Instruction ${JSON.stringify(instruction.toJSON())}`);
+        await removeGPAData(oldInstruction.AvgGPA, oldInstruction.GradePoints, course);
+
+        if (!instruction.ProfessorId) return;
+        let professor = await Professor.findByPk(instruction.ProfessorId);
+        if (!professor)
+          throw new Error(`No Professr found corresponding to Instruction ${JSON.stringify(instruction.toJSON())}`);
+        await removeGPAData(oldInstruction.AvgGPA, oldInstruction.GradePoints, professor);
       },
       afterDestroy: async (instruction) => {
         if (!instruction.AvgGPA) return;
@@ -365,7 +378,7 @@ Instruction.init(
         let professor = await instruction.getProfessor();
         await removeGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
       },
-      afterSave: async (instruction) => {
+      afterCreate: async (instruction) => {
         if (!instruction.AvgGPA) return;
         let course = await instruction.getCourse();
         await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
@@ -376,15 +389,7 @@ Instruction.init(
       },
       afterUpsert: async ([instruction]) => {
         if (!instruction.AvgGPA) return;
-        let course = await instruction.getCourse();
-        await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
 
-        if (!instruction.ProfessorId) return;
-        let professor = await instruction.getProfessor();
-        await addGPAData(instruction.AvgGPA, instruction.GradePoints, professor);
-      },
-      afterCreate: async (instruction) => {
-        if (!instruction.AvgGPA) return;
         let course = await instruction.getCourse();
         await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
 
@@ -394,6 +399,7 @@ Instruction.init(
       },
       afterUpdate: async (instruction) => {
         if (!instruction.AvgGPA) return;
+
         let course = await instruction.getCourse();
         await addGPAData(instruction.AvgGPA, instruction.GradePoints, course);
 
@@ -505,32 +511,47 @@ Section.init(
     modelName: "Section",
     indexes: [
       {
-        fields: ["Course", "TermId", "SectionNumber"],
+        fields: ["TermId", "Course", "SectionNumber"],
         unique: true,
       },
     ],
     hooks: {
-      beforeSave: async (section) => {
-        if (!section.AvgGPA) return;
-        let instruction = await section.getInstruction();
-        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+      beforeUpsert: async (section) => {
+        let oldSection = await Section.findOne({
+          where: {
+            TermId: section.TermId,
+            Course: section.Course,
+            SectionNumber: section.SectionNumber,
+          },
+        });
+        if (!oldSection?.AvgGPA) return;
+
+        let instruction = await Instruction.findByPk(section.InstructionId);
+        if (!instruction)
+          throw new Error(`No Instruction found corresponding to Section ${JSON.stringify(section.toJSON())}`);
+        if (oldSection.AvgGPA) await removeGPAData(oldSection.AvgGPA, oldSection.GradePoints, instruction);
       },
       beforeUpdate: async (section) => {
-        if (!section.AvgGPA) return;
-        let instruction = await section.getInstruction();
-        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
-      },
-      beforeUpsert: async (section) => {
-        if (!section.AvgGPA) return;
-        let instruction = await section.getInstruction();
-        await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
+        let oldSection = await Section.findOne({
+          where: {
+            TermId: section.TermId,
+            Course: section.Course,
+            SectionNumber: section.SectionNumber,
+          },
+        });
+        if (!oldSection?.AvgGPA) return;
+
+        let instruction = await Instruction.findByPk(section.InstructionId);
+        if (!instruction)
+          throw new Error(`No Instruction found corresponding to Section ${JSON.stringify(section.toJSON())}`);
+        if (oldSection.AvgGPA) await removeGPAData(oldSection.AvgGPA, oldSection.GradePoints, instruction);
       },
       afterDestroy: async (section) => {
         if (!section.AvgGPA) return;
         let instruction = await section.getInstruction();
         await removeGPAData(section.AvgGPA, section.GradePoints, instruction);
       },
-      afterSave: async (section) => {
+      afterCreate: async (section) => {
         if (!section.AvgGPA) return;
         let instruction = await section.getInstruction();
         await addGPAData(section.AvgGPA, section.GradePoints, instruction);
@@ -541,11 +562,6 @@ Section.init(
         await addGPAData(section.AvgGPA, section.GradePoints, instruction);
       },
       afterUpdate: async (section) => {
-        if (!section.AvgGPA) return;
-        let instruction = await section.getInstruction();
-        await addGPAData(section.AvgGPA, section.GradePoints, instruction);
-      },
-      afterCreate: async (section) => {
         if (!section.AvgGPA) return;
         let instruction = await section.getInstruction();
         await addGPAData(section.AvgGPA, section.GradePoints, instruction);
@@ -666,34 +682,38 @@ GradeData.init(
     sequelize,
     modelName: "GradeData",
     hooks: {
-      beforeSave: async (gradeData) => {
-        let section = await gradeData.getSection();
-        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
-        await removeGPAData(avgGPA, gradePoints, section);
+      beforeUpsert: async (gradeData, {}) => {
+        let section = await Section.findByPk(gradeData.SectionId, { include: { model: GradeData, as: "gradeData" } });
+        if (!section)
+          throw new Error(`No Section found corresponding to GradeData ${JSON.stringify(gradeData.toJSON())}`);
+
+        if (section.gradeData) {
+          let [avgGPA, gradePoints] = calcGPAData(section.gradeData);
+          await removeGPAData(avgGPA, gradePoints, section);
+        }
       },
-      beforeUpsert: async (gradeData) => {
-        let section = await gradeData.getSection();
-        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
-        await removeGPAData(avgGPA, gradePoints, section);
+      beforeUpdate: async (gradeData, {}) => {
+        let section = await Section.findByPk(gradeData.SectionId, { include: { model: GradeData, as: "gradeData" } });
+        if (!section)
+          throw new Error(`No Section found corresponding to GradeData ${JSON.stringify(gradeData.toJSON())}`);
+        if (section.gradeData) {
+          let [avgGPA, gradePoints] = calcGPAData(section.gradeData);
+          await removeGPAData(avgGPA, gradePoints, section);
+        }
       },
-      beforeUpdate: async (gradeData) => {
-        let section = await gradeData.getSection();
-        let [avgGPA, gradePoints] = calcGPAData(gradeData._previousDataValues);
-        await removeGPAData(avgGPA, gradePoints, section);
+      beforeCreate: async (gradeData, {}) => {
+        let section = await Section.findByPk(gradeData.SectionId, { include: { model: GradeData, as: "gradeData" } });
+        if (section?.gradeData) {
+          let [avgGPA, gradePoints] = calcGPAData(section.gradeData);
+          await removeGPAData(avgGPA, gradePoints, section);
+        }
       },
-      beforeDestroy: async (gradeData) => {
+      afterDestroy: async (gradeData) => {
         let section = await gradeData.getSection();
         let [avgGPA, gradePoints] = calcGPAData(gradeData);
         await removeGPAData(avgGPA, gradePoints, section);
       },
       afterCreate: async (gradeData) => {
-        gradeData.previous();
-        let section = await gradeData.getSection();
-        let [avgGPA, gradePoints] = calcGPAData(gradeData);
-        await addGPAData(avgGPA, gradePoints, section);
-      },
-      afterSave: async (gradeData) => {
-        gradeData.previous();
         let section = await gradeData.getSection();
         let [avgGPA, gradePoints] = calcGPAData(gradeData);
         await addGPAData(avgGPA, gradePoints, section);
@@ -895,7 +915,9 @@ Professor.hasMany(Instruction, {
 Instruction.belongsTo(Professor, {
   foreignKey: {
     name: "ProfessorId",
-    allowNull: true,
+    // We cannot allow professorid to be null, it needs to be "Staff" for the unique index
+    // since Postgresql doesn't treat multiple NULLS as conflicting with unique
+    // allowNull: true,
   },
   as: "professor",
 });
@@ -913,6 +935,10 @@ Section.belongsTo(Instruction, {
 });
 
 Section.hasOne(GradeData, {
+  foreignKey: {
+    allowNull: false,
+    name: "SectionId",
+  },
   onDelete: "CASCADE",
   as: "gradeData",
 });
