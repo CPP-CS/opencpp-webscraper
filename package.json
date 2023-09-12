@@ -12,7 +12,7 @@
     "convertToJson": "ts-node ./src/commands/convertToJson.ts",
     "truncateAllTables": "ts-node ./src/commands/truncateAllTables",
     "calcGradeData": "ts-node ./src/commands/calcGradeData",
-    "rebuildEverything": "npm run dropAllTables && npm run syncModels && npm run scrapePublicSchedule && npm run parseGradeData",
+    "rebuildEverything": "npm run dropAllTables && npm run syncModels && npm run scrapePublicSchedule && npm run parseGradeData && npm run calcGradeData",
     "test": "cross-env ENV=test mocha 'test/**/*.ts' --recursive --require ts-node/register --reporter spec"
   },
   "repository": {
