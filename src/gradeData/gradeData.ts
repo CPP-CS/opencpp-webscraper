@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Course, GradeData, Instruction, Professor, Section } from "../db/models";
+import { Course, GradeData, Instruction, Professor, Section } from "../db/db";
 import { addGPAData, calcGPAData, resetGPAData } from "./utils";
 
 export const updateGradeData = async () => {

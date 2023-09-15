@@ -1,7 +1,7 @@
 import puppeteer, { Page } from "puppeteer";
 import { parseTime, parseDate } from "../utils";
 import { courseComponents, terms } from "../constants";
-import { Section } from "../db/models";
+import { Section } from "../db/db";
 import { SectionData, upsertSection } from "../db/utils";
 import envVars from "../envVars";
 

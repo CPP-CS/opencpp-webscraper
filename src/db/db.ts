@@ -1,5 +1,9 @@
+import envVars from "../envVars";
 import {
   Association,
+  BelongsToCreateAssociationMixin,
+  BelongsToGetAssociationMixin,
+  BelongsToSetAssociationMixin,
   CreationOptional,
   DataTypes,
   ForeignKey,
@@ -16,15 +20,27 @@ import {
   HasOneCreateAssociationMixin,
   HasOneGetAssociationMixin,
   HasOneSetAssociationMixin,
-  BelongsToGetAssociationMixin,
-  BelongsToSetAssociationMixin,
-  BelongsToCreateAssociationMixin,
   InferAttributes,
   InferCreationAttributes,
   Model,
   NonAttribute,
+  Sequelize,
 } from "sequelize";
-import { sequelize } from "./connection";
+
+const vars = envVars.database;
+export const sequelize = new Sequelize(
+  envVars.test ? vars.testDatabaseName : vars.databaseName,
+  vars.userName,
+  vars.password,
+  {
+    host: vars.host,
+    dialect: "postgres",
+    logging: false,
+    pool: {
+      max: 45,
+    },
+  }
+);
 
 export class Term extends Model<InferAttributes<Term, { omit: "sections" }>, InferCreationAttributes<Term>> {
   declare id: CreationOptional<number>;
@@ -792,6 +808,3 @@ Event.belongsTo(Location, {
   },
   as: "location",
 });
-
-// This is left here so we can ensure other models are loaded.
-export const loadModels = () => {};

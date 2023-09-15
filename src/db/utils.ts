@@ -1,6 +1,5 @@
-import { CreationAttributes, Model } from "sequelize";
-import { Term, Section, Subject, Course, Professor, Event, Location, GradeData, Instruction } from "./models";
-import { GPA } from "../constants";
+import { CreationAttributes } from "sequelize";
+import { Course, GradeData, Instruction, Location, Professor, Section, Subject, Term, Event } from "./db";
 
 export type SectionData = Omit<
   CreationAttributes<Section> & {

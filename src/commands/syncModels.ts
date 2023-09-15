@@ -1,8 +1,6 @@
-import { sequelize } from "../db/connection";
-import { loadModels } from "../db/models";
+import { sequelize } from "../db/db";
 
 export const syncModels = async (logging?: boolean) => {
-  await loadModels();
   await sequelize.sync({ alter: true, logging: logging ?? false });
 };
 syncModels();

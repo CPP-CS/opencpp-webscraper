@@ -1,4 +1,4 @@
-import { sequelize } from "../db/connection";
+import { sequelize } from "../db/db";
 
 export const truncateAllTables = async (logging?: boolean) => {
   await sequelize.truncate({

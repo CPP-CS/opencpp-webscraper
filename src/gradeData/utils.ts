@@ -1,5 +1,5 @@
 import { GPA } from "../constants";
-import { GradeData, Section, Instruction, Course, Professor } from "../db/models";
+import { GradeData, Section, Instruction, Course, Professor } from "../db/db";
 
 // calc average gpa and count data points for GradeData
 export function calcGPAData(gradeData: GradeData): [number, number] {

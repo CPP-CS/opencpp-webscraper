@@ -1,9 +1,6 @@
-import { sequelize } from "../db/connection";
-import { loadModels } from "../db/models";
+import { sequelize } from "../db/db";
 
 export const dropAllTables = async () => {
-  // Models need to be loaded before dropping
-  await loadModels();
   await sequelize.drop();
 };
 dropAllTables();
