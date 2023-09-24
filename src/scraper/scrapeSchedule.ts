@@ -189,7 +189,7 @@ export async function scrapePublicSchedule(current?: boolean) {
         for (const [ind, section] of Object.entries(sectionData)) {
           await upsertSection(section);
           console.log(
-            `Updated [${ind + 1} / ${sectionData.length}]`,
+            `Updated [${parseInt(ind) + 1} / ${sectionData.length}]`,
             section.ClassNumber,
             section.course.subject.Name,
             section.course.CourseNumber

@@ -142,7 +142,7 @@ export async function scrapeClassHistory() {
     try {
       await upsertSection(section);
       console.log(
-        `Updating [${ind + 1} / ${data.length}]`,
+        `Updating [${parseInt(ind) + 1} / ${data.length}]`,
         section.term.TermName,
         section.course.subject.Name,
         section.course.CourseNumber,
@@ -150,7 +150,7 @@ export async function scrapeClassHistory() {
       );
     } catch (e) {
       console.log(
-        `Failed [${ind + 1} / ${data.length}]`,
+        `Failed [${parseInt(ind) + 1} / ${data.length}]`,
         section.term.TermName,
         section.course.subject.Name,
         section.course.CourseNumber,
