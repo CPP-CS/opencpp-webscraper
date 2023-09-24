@@ -77,7 +77,7 @@ export const upsertSection = async (sectionData: SectionData) => {
       TotalCapacity: sectionData.TotalCapacity,
       InstructionMode: sectionData.InstructionMode,
       ClassNumber: sectionData.ClassNumber,
-      Course: sectionData.course.subject.Subject + sectionData.course.CourseNumber,
+      Course: sectionData.course.subject.Name + sectionData.course.CourseNumber,
       TermId: (await Term.upsert(sectionData.term))[0].id,
       InstructionId: (
         await Instruction.upsert({

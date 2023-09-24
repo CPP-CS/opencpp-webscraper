@@ -169,7 +169,7 @@ export class Subject extends Model<InferAttributes<Subject, { omit: "courses" }>
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
-  declare Subject: string;
+  declare Name: string;
 
   declare courses?: NonAttribute<Course[]>;
   declare getCourses: HasManyGetAssociationsMixin<Course>;
@@ -196,7 +196,7 @@ Subject.init(
     },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
-    Subject: {
+    Name: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,

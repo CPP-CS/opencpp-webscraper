@@ -117,7 +117,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string): Pr
           CourseType: courseComponent,
           Units,
           subject: {
-            Subject: Subject,
+            Name: Subject,
           },
         },
         professor: parseName(instructor ?? ""),
@@ -191,7 +191,7 @@ export async function scrapePublicSchedule(current?: boolean) {
           console.log(
             `Updated [${ind + 1} / ${sectionData.length}]`,
             section.ClassNumber,
-            section.course.subject.Subject,
+            section.course.subject.Name,
             section.course.CourseNumber
           );
         }

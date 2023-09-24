@@ -88,7 +88,7 @@ function parseSection(section: SectionFormat): SectionData {
     course: {
       CourseNumber: section["Catalog Number"],
       subject: {
-        Subject: fixSubject(section["Subject"]),
+        Name: fixSubject(section["Subject"]),
       },
     },
     event:
@@ -144,7 +144,7 @@ export async function scrapeClassHistory() {
       console.log(
         `Updating [${ind + 1} / ${data.length}]`,
         section.term.TermName,
-        section.course.subject.Subject,
+        section.course.subject.Name,
         section.course.CourseNumber,
         section.SectionNumber
       );
@@ -152,7 +152,7 @@ export async function scrapeClassHistory() {
       console.log(
         `Failed [${ind + 1} / ${data.length}]`,
         section.term.TermName,
-        section.course.subject.Subject,
+        section.course.subject.Name,
         section.course.CourseNumber,
         section.SectionNumber,
         e
