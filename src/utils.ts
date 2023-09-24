@@ -1,47 +1,52 @@
-import { prisma, Prisma, Section } from "@prisma/client";
-import { prismaClient } from ".";
-import { GPA } from "./constants";
+import moment from "moment";
+import { CreationAttributes } from "sequelize";
+import { Professor } from "./db/db";
 
-export async function truncateDatabase() {
-  await prismaClient.course.deleteMany({ where: {} });
-  await prismaClient.instructor.deleteMany({ where: {} });
+function capitalizeFirst(str: string | undefined): string | undefined {
+  if (!str) return str;
+  return str
+    .split(" ")
+    .map((s) => s.charAt(0) + s.slice(1))
+    .join(" ");
 }
 
-export function removeInitials(s: string) {
-  let res = s;
-  res = res.split(" ")[0];
-  return res;
-}
+export function parseName(name: string): CreationAttributes<Professor> {
+  const nameParts = name.split(",");
 
-export function removeJr(s: string) {
-  let res = s;
-  res = res.split(" Jr")[0];
-  return res;
-}
-
-// calc average gpa for individual sections
-export function calcAvgGPA(section: Prisma.SectionCreateInput | Prisma.SectionUpdateInput) {
-  if (!section.TotalEnrollment) return null;
-  let tEnrollment = 0;
-  let tPoints = 0;
-  tEnrollment = parseInt(section.TotalEnrollment.toString());
-  for (let gradeKey in GPA) {
-    tPoints += GPA[gradeKey] * ((section as any)[gradeKey] || 0);
+  if (nameParts.length < 2) {
+    return {
+      FirstName: "Staff",
+    };
   }
-  // console.log(tPoints / tEnrollment);
-  return tPoints / tEnrollment;
+
+  const Beginning = nameParts[1].trim();
+  const BeginningParts = Beginning.split(" ");
+  const FirstName = BeginningParts[0];
+  let MiddleName: string | undefined;
+  if (BeginningParts.length > 1) {
+    MiddleName = BeginningParts.slice(1).join(" ");
+  }
+
+  const suffixes = ["JR", "SR", "II", "III", "IV", "V"];
+  const End = nameParts[0].trim();
+  const EndParts = End.split(" ");
+  let Suffix: string | undefined;
+  if (suffixes.includes(EndParts[EndParts.length - 1].toUpperCase())) {
+    Suffix = EndParts.pop();
+  }
+  const LastName = EndParts.join(" ");
+
+  return {
+    FirstName: capitalizeFirst(FirstName) as string,
+    MiddleName: capitalizeFirst(MiddleName),
+    LastName: capitalizeFirst(LastName),
+    Suffix: capitalizeFirst(Suffix),
+  };
 }
 
-// aggregate avg gpas from children
-export function aggregateGPA(dataPoints: { TotalEnrollment: number | null; AvgGPA: number | null }[]) {
-  let totalEnrollment = 0;
-  let totalGPA = 0;
-  for (let data of dataPoints) {
-    // console.log(data);
-    if (data.AvgGPA && data.TotalEnrollment) {
-      totalEnrollment += data.TotalEnrollment;
-      totalGPA += data.TotalEnrollment * data.AvgGPA;
-    }
-  }
-  return { TotalEnrollment: totalEnrollment, AvgGPA: totalGPA / totalEnrollment };
+export function parseTime(time: string): string {
+  return moment(time, "hh:mm A").format("HH:mm:ss");
+}
+export function parseDate(date: string): Date {
+  return moment(date, "YYYY-MM-DD").toDate();
 }
