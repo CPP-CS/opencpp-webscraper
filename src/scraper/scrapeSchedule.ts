@@ -1,5 +1,5 @@
 import puppeteer, { Page } from "puppeteer";
-import { parseTime, parseDate } from "../utils";
+import { parseTime, parseDate, parseName } from "../utils";
 import { courseComponents, terms } from "../constants";
 import { Section } from "../db/db";
 import { SectionData, upsertSection } from "../db/utils";
@@ -120,9 +120,7 @@ async function scrapePage(page: Page, term: string, courseComponent: string): Pr
             Subject: Subject,
           },
         },
-        professor: {
-          Name: instructor ?? "Staff",
-        },
+        professor: parseName(instructor ?? ""),
         event:
           StartTime && EndTime
             ? {
@@ -188,17 +186,15 @@ export async function scrapePublicSchedule(current?: boolean) {
       try {
         let sectionData = await scrapePage(page, term, courseComponent);
         console.log(`Successfully parsed ${sectionData.length} sections, starting data upsert`);
-        await Promise.all(
-          sectionData.map(async (section, ind) => {
-            await upsertSection(section);
-            console.log(
-              `Updated [${ind + 1} / ${sectionData.length}]`,
-              section.ClassNumber,
-              section.course.subject.Subject,
-              section.course.CourseNumber
-            );
-          })
-        );
+        for (const [ind, section] of Object.entries(sectionData)) {
+          await upsertSection(section);
+          console.log(
+            `Updated [${ind + 1} / ${sectionData.length}]`,
+            section.ClassNumber,
+            section.course.subject.Subject,
+            section.course.CourseNumber
+          );
+        }
       } catch (e) {
         console.log(`Failed to process ${term} ${courseComponent}: ${e}`);
       }

@@ -1,15 +1,47 @@
 import moment from "moment";
+import { CreationAttributes } from "sequelize";
+import { Professor } from "./db/db";
 
-export function removeInitials(s: string) {
-  let res = s;
-  res = res.split(" ")[0];
-  return res;
+function capitalizeFirst(str: string | undefined): string | undefined {
+  if (!str) return str;
+  return str
+    .split(" ")
+    .map((s) => s.charAt(0) + s.slice(1))
+    .join(" ");
 }
 
-export function removeJr(s: string) {
-  let res = s;
-  res = res.split(" Jr")[0];
-  return res;
+export function parseName(name: string): CreationAttributes<Professor> {
+  const nameParts = name.split(",");
+
+  if (nameParts.length < 2) {
+    return {
+      FirstName: "Staff",
+    };
+  }
+
+  const Beginning = nameParts[1].trim();
+  const BeginningParts = Beginning.split(" ");
+  const FirstName = BeginningParts[0];
+  let MiddleName: string | undefined;
+  if (BeginningParts.length > 1) {
+    MiddleName = BeginningParts.slice(1).join(" ");
+  }
+
+  const suffixes = ["JR", "SR", "II", "III", "IV", "V"];
+  const End = nameParts[0].trim();
+  const EndParts = End.split(" ");
+  let Suffix: string | undefined;
+  if (suffixes.includes(EndParts[EndParts.length - 1].toUpperCase())) {
+    Suffix = EndParts.pop();
+  }
+  const LastName = EndParts.join(" ");
+
+  return {
+    FirstName: capitalizeFirst(FirstName) as string,
+    MiddleName: capitalizeFirst(MiddleName),
+    LastName: capitalizeFirst(LastName),
+    Suffix: capitalizeFirst(Suffix),
+  };
 }
 
 export function parseTime(time: string): string {
@@ -17,15 +49,4 @@ export function parseTime(time: string): string {
 }
 export function parseDate(date: string): Date {
   return moment(date, "YYYY-MM-DD").toDate();
-}
-
-// This staggers promises so we don't overload sequelize.
-export async function staggerPromises<T>(values: T[], f: (val: T, ind: number) => Promise<void>, increment: number) {
-  for (let i = 0; i < values.length; i += increment) {
-    await Promise.all(
-      values.slice(i, Math.min(i + increment, values.length)).map(async (val, ind) => {
-        await f(val, i + ind);
-      })
-    );
-  }
 }

@@ -1,7 +1,7 @@
 import moment from "moment";
 import classHistory from "./data.json";
 import { SectionData, upsertSection } from "../db/utils";
-import { staggerPromises } from "../utils";
+import { parseName } from "../utils";
 
 export interface SectionFormat {
   Term: string | undefined;
@@ -66,6 +66,7 @@ function fixSubject(subject: string): string {
       return subject;
   }
 }
+
 function parseSection(section: SectionFormat): SectionData {
   console.log("Loading", section.Term, section["Class Number"]);
 
@@ -105,9 +106,7 @@ function parseSection(section: SectionFormat): SectionData {
             EndTime,
           }
         : undefined,
-    professor: {
-      Name: section["Instructor Name"] ?? "Staff",
-    },
+    professor: parseName(section["Instructor Name"] || ""),
 
     gradeData: {
       A: section["Bronco ID_Count_A"] ? parseInt(section["Bronco ID_Count_A"]) : undefined,
@@ -139,32 +138,28 @@ export async function scrapeClassHistory() {
   let failed: SectionData[] = [];
 
   console.log("Loading Promises");
-  await staggerPromises(
-    data,
-    async (section, ind) => {
-      try {
-        await upsertSection(section);
-        console.log(
-          `Updating [${ind + 1} / ${data.length}]`,
-          section.term.TermName,
-          section.course.subject.Subject,
-          section.course.CourseNumber,
-          section.SectionNumber
-        );
-      } catch (e) {
-        console.log(
-          `Failed [${ind + 1} / ${data.length}]`,
-          section.term.TermName,
-          section.course.subject.Subject,
-          section.course.CourseNumber,
-          section.SectionNumber,
-          e
-        );
-        failed.push(section);
-      }
-    },
-    1000
-  );
+  for (const [ind, section] of Object.entries(data)) {
+    try {
+      await upsertSection(section);
+      console.log(
+        `Updating [${ind + 1} / ${data.length}]`,
+        section.term.TermName,
+        section.course.subject.Subject,
+        section.course.CourseNumber,
+        section.SectionNumber
+      );
+    } catch (e) {
+      console.log(
+        `Failed [${ind + 1} / ${data.length}]`,
+        section.term.TermName,
+        section.course.subject.Subject,
+        section.course.CourseNumber,
+        section.SectionNumber,
+        e
+      );
+      failed.push(section);
+    }
+  }
 
   console.log("failed updates:", failed);
 }

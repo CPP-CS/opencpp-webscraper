@@ -101,7 +101,10 @@ export class Professor extends Model<
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 
-  declare Name: string;
+  declare FirstName: string;
+  declare MiddleName: CreationOptional<string | null>;
+  declare LastName: CreationOptional<string | null>;
+  declare Suffix: CreationOptional<string | null>;
   declare AvgGPA: number | null;
   declare GradePoints: number;
 
@@ -130,10 +133,20 @@ Professor.init(
     },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
-    Name: {
+    FirstName: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+    },
+    MiddleName: {
+      type: DataTypes.STRING,
+    },
+    LastName: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      values: [],
+    },
+    Suffix: {
+      type: DataTypes.STRING,
     },
     AvgGPA: DataTypes.FLOAT,
     GradePoints: {
