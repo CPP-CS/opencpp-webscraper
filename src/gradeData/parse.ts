@@ -135,7 +135,7 @@ function readFile(): SectionFormat[] {
 }
 
 export async function scrapeClassHistory() {
-  let sections = classHistory as unknown as SectionFormat[];
+  let sections = readFile();
   let failed: SectionData[] = [];
 
   for (let i = 0; i < sections.length; i += 1000) {
