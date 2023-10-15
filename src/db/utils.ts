@@ -33,7 +33,8 @@ export const upsertProfessor = async (professorData: CreationAttributes<Professo
       },
     });
     if (prof) await prof.update(professorData);
-    else await Professor.create(professorData);
+    else return (await Professor.create(professorData)).id;
+    return prof.id;
   }
 
   const existing = await Professor.findAll({
