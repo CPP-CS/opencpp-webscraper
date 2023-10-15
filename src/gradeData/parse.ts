@@ -138,13 +138,15 @@ export async function scrapeClassHistory() {
   let failed: SectionData[] = [];
 
   for (let i = 0; i < sections.length; i += 1000) {
-    console.log(`Loading sections ${i} through ${Math.min(i + 1000, sections.length - 1)}`);
-    const data = sections.slice(i, Math.min(i + 1000, sections.length - 1)).map((section) => parseSection(section));
-    for (const [ind, section] of Object.entries(data)) {
+    const end = Math.min(i + 1000, sections.length - 1);
+    Math.min(i + 1000, sections.length - 1);
+    console.log(`Loading sections ${i} through ${end}`);
+    const data = sections.slice(i, end).map((section) => parseSection(section));
+    for (const section of data) {
       try {
         await upsertSection(section);
         console.log(
-          `Updating [${parseInt(ind) + 1} / ${data.length}]`,
+          `Updating [${i} / ${end}]`,
           section.term.TermName,
           section.course.subject.Name,
           section.course.CourseNumber,
@@ -152,7 +154,7 @@ export async function scrapeClassHistory() {
         );
       } catch (e) {
         console.log(
-          `Failed [${parseInt(ind) + 1} / ${data.length}]`,
+          `Failed [${i} / ${end}]`,
           section.term.TermName,
           section.course.subject.Name,
           section.course.CourseNumber,
