@@ -129,7 +129,7 @@ function parseSection(section: SectionFormat): SectionData {
 }
 
 function readFile(): SectionFormat[] {
-  const data = readFileSync(path.resolve(__dirname, "src/gradeData/data.json"));
+  const data = readFileSync(path.resolve(__dirname, "data.json"));
   return JSON.parse(data.toString()) as SectionFormat[];
 }
 
