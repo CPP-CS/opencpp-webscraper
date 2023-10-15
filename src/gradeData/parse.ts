@@ -1,5 +1,4 @@
 import moment from "moment";
-import classHistory from "./data.json";
 import { SectionData, upsertSection } from "../db/utils";
 import { parseName } from "../utils";
 import { readFileSync } from "fs";
