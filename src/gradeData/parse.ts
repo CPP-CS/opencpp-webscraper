@@ -2,6 +2,8 @@ import moment from "moment";
 import classHistory from "./data.json";
 import { SectionData, upsertSection } from "../db/utils";
 import { parseName } from "../utils";
+import { readFileSync } from "fs";
+import path from "path";
 
 export interface SectionFormat {
   Term: string | undefined;
@@ -125,6 +127,11 @@ function parseSection(section: SectionFormat): SectionData {
   };
 
   return newData;
+}
+
+function readFile(): SectionFormat[] {
+  const data = readFileSync(path.resolve(__dirname, "src/gradeData/data.json"));
+  return JSON.parse(data.toString()) as SectionFormat[];
 }
 
 export async function scrapeClassHistory() {
