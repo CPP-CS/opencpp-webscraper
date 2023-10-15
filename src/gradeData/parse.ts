@@ -129,35 +129,32 @@ function parseSection(section: SectionFormat): SectionData {
 
 export async function scrapeClassHistory() {
   let sections = classHistory as unknown as SectionFormat[];
-  let data: SectionData[] = [];
-
-  for (let section in sections) {
-    data.push(parseSection(sections[section]));
-  }
-
   let failed: SectionData[] = [];
 
-  console.log("Loading Promises");
-  for (const [ind, section] of Object.entries(data)) {
-    try {
-      await upsertSection(section);
-      console.log(
-        `Updating [${parseInt(ind) + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject.Name,
-        section.course.CourseNumber,
-        section.SectionNumber
-      );
-    } catch (e) {
-      console.log(
-        `Failed [${parseInt(ind) + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject.Name,
-        section.course.CourseNumber,
-        section.SectionNumber,
-        e
-      );
-      failed.push(section);
+  for (let i = 0; i < sections.length; i += 1000) {
+    console.log(`Loading sections ${i} through ${Math.min(i + 1000, sections.length - 1)}`);
+    const data = sections.slice(i, Math.min(i + 1000, sections.length - 1)).map((section) => parseSection(section));
+    for (const [ind, section] of Object.entries(data)) {
+      try {
+        await upsertSection(section);
+        console.log(
+          `Updating [${parseInt(ind) + 1} / ${data.length}]`,
+          section.term.TermName,
+          section.course.subject.Name,
+          section.course.CourseNumber,
+          section.SectionNumber
+        );
+      } catch (e) {
+        console.log(
+          `Failed [${parseInt(ind) + 1} / ${data.length}]`,
+          section.term.TermName,
+          section.course.subject.Name,
+          section.course.CourseNumber,
+          section.SectionNumber,
+          e
+        );
+        failed.push(section);
+      }
     }
   }
 
