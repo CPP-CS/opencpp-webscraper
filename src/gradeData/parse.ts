@@ -1,7 +1,8 @@
 import moment from "moment";
-import classHistory from "./data.json";
 import { SectionData, upsertSection } from "../db/utils";
 import { parseName } from "../utils";
+import { readFileSync } from "fs";
+import path from "path";
 
 export interface SectionFormat {
   Term: string | undefined;
@@ -127,37 +128,41 @@ function parseSection(section: SectionFormat): SectionData {
   return newData;
 }
 
+function readFile(): SectionFormat[] {
+  const data = readFileSync(path.resolve(__dirname, "data.json"));
+  return JSON.parse(data.toString()) as SectionFormat[];
+}
+
 export async function scrapeClassHistory() {
-  let sections = classHistory as unknown as SectionFormat[];
-  let data: SectionData[] = [];
-
-  for (let section in sections) {
-    data.push(parseSection(sections[section]));
-  }
-
+  let sections = readFile();
   let failed: SectionData[] = [];
 
-  console.log("Loading Promises");
-  for (const [ind, section] of Object.entries(data)) {
-    try {
-      await upsertSection(section);
-      console.log(
-        `Updating [${parseInt(ind) + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject.Name,
-        section.course.CourseNumber,
-        section.SectionNumber
-      );
-    } catch (e) {
-      console.log(
-        `Failed [${parseInt(ind) + 1} / ${data.length}]`,
-        section.term.TermName,
-        section.course.subject.Name,
-        section.course.CourseNumber,
-        section.SectionNumber,
-        e
-      );
-      failed.push(section);
+  for (let i = 0; i < sections.length; i += 1000) {
+    const end = Math.min(i + 1000, sections.length - 1);
+    Math.min(i + 1000, sections.length - 1);
+    console.log(`Loading sections ${i} through ${end}`);
+    const data = sections.slice(i, end).map((section) => parseSection(section));
+    for (const section of data) {
+      try {
+        await upsertSection(section);
+        console.log(
+          `Updating [${i} / ${end}]`,
+          section.term.TermName,
+          section.course.subject.Name,
+          section.course.CourseNumber,
+          section.SectionNumber
+        );
+      } catch (e) {
+        console.log(
+          `Failed [${i} / ${end}]`,
+          section.term.TermName,
+          section.course.subject.Name,
+          section.course.CourseNumber,
+          section.SectionNumber,
+          e
+        );
+        failed.push(section);
+      }
     }
   }
 

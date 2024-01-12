@@ -25,7 +25,16 @@ export const upsertProfessor = async (professorData: CreationAttributes<Professo
   // Special Staff case
   if (!LastName) {
     if (FirstName !== "Staff") throw new Error(`No LastName but not Staff? ${JSON.stringify(professorData)}`);
-    return (await Professor.upsert(professorData))[0].id;
+
+    // We need a special upsert to handle the "null" case for LastName
+    const prof = await Professor.findOne({
+      where: {
+        FirstName,
+      },
+    });
+    if (prof) await prof.update(professorData);
+    else return (await Professor.create(professorData)).id;
+    return prof.id;
   }
 
   const existing = await Professor.findAll({

@@ -799,6 +799,10 @@ GradeData.belongsTo(Section, {
 });
 
 Section.hasOne(Event, {
+  foreignKey: {
+    allowNull: false,
+    name: "SectionId",
+  },
   onDelete: "CASCADE",
   as: "event",
 });

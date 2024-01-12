@@ -21,7 +21,8 @@ async function scrapePage(page: Page, term: string, courseComponent: string): Pr
       let SectionNumber: string = (await page.evaluate((el) => el.innerText, section))
         .split(" ")[3]
         .split("Class")[0]
-        .replace("\n", "");
+        .replace("\n", "")
+        .replace(/^0+/, "");
 
       //class number
       let classNumberCell = await section.$("[id$='TableCell13']");
@@ -152,6 +153,7 @@ export async function scrapePublicSchedule(current?: boolean) {
   // open launcher and go to page
   const browser = await puppeteer.launch({
     headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   const page = await browser.newPage();
   await page.goto("https://schedule.cpp.edu/");
