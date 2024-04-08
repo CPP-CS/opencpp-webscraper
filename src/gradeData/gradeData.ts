@@ -19,7 +19,8 @@ export const updateGradeData = async () => {
       await resetGPAData(section);
 
       let [AvgGPA, GradePoints] = calcGPAData(section.gradeData);
-      (section.AvgGPA = AvgGPA), (section.GradePoints = GradePoints);
+      section.AvgGPA = AvgGPA;
+      section.GradePoints = GradePoints;
       await section.save();
       console.log(`Calculated GPA Data for Section [${ind + 1}/${sections.length}]`);
     })
